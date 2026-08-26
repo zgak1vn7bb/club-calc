@@ -81,6 +81,21 @@ h1{text-align:center;color:#d4b058;margin:30px 0;font-size:24px;}
             </div>
         </div>
 
+        <div class="generate-box">
+            <h3>卡密续费</h3>
+            <div id="renewMsg" class="msg"></div>
+            <div class="form-row">
+                <input type="text" id="renewKey" placeholder="输入要续费的卡密" style="flex:2;">
+                <select id="renewType">
+                    <option value="hours">续2小时</option>
+                    <option value="days_1">续1天</option>
+                    <option value="days_7">续7天</option>
+                    <option value="permanent">续永久（9999天）</option>
+                </select>
+                <button onclick="renewCard()">续费</button>
+            </div>
+        </div>
+
         <div class="cards-list">
             <h3>卡密列表 <button onclick="loadCards()">刷新</button></h3>
             <div id="cardsList"></div>
@@ -194,6 +209,54 @@ async function generateCards() {
         loadCards();
     } catch (e) {
         showMsg('genMsg', '生成失败: ' + e.message, 'error');
+    }
+}
+
+async function renewCard() {
+    const key = document.getElementById('renewKey').value.trim().toUpperCase();
+    const typeSel = document.getElementById('renewType').value;
+    if (!key) { showMsg('renewMsg', '请输入卡密', 'error'); return; }
+
+    let addMs;
+    if (typeSel === 'hours') addMs = 2 * 3600000;
+    else if (typeSel === 'days_1') addMs = 86400000;
+    else if (typeSel === 'days_7') addMs = 7 * 86400000;
+    else addMs = 9999 * 86400000;
+
+    try {
+        // 查绑定记录
+        const { data: binding, error } = await supabaseClient
+            .from('card_bindings')
+            .select('*')
+            .eq('card_key', key)
+            .single();
+
+        if (error || !binding) {
+            showMsg('renewMsg', '该卡密未被激活，无法续费', 'error');
+            return;
+        }
+
+        // 计算新的过期时间：没过期就加，过期了就从现在算
+        const oldExpire = new Date(binding.expires_at).getTime();
+        const now = Date.now();
+        const baseTime = oldExpire > now ? oldExpire : now;
+        const newExpire = new Date(baseTime + addMs).toISOString();
+
+        // 更新
+        const { error: updateError } = await supabaseClient
+            .from('card_bindings')
+            .update({ expires_at: newExpire })
+            .eq('card_key', key);
+
+        if (updateError) throw updateError;
+
+        const typeName = typeSel === 'hours' ? '2小时' : (typeSel === 'days_1' ? '1天' : (typeSel === 'days_7' ? '7天' : '永久'));
+        showMsg('renewMsg', `续费成功！已延长${typeName}，新到期：${new Date(newExpire).toLocaleString('zh-CN')}`, 'success');
+        document.getElementById('renewKey').value = '';
+        loadStats();
+        loadCards();
+    } catch (e) {
+        showMsg('renewMsg', '续费失败: ' + e.message, 'error');
     }
 }
 
