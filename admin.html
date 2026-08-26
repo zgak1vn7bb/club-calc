@@ -35,6 +35,9 @@ h1{text-align:center;color:#d4b058;margin:30px 0;font-size:24px;}
 .stat-box .num{font-size:24px;font-weight:bold;color:#d4b058;}
 .stat-box .label{font-size:12px;color:#8a7d5a;margin-top:5px;}
 .logout{position:absolute;top:20px;right:20px;padding:8px 15px;background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);border-radius:6px;color:#e74c3c;cursor:pointer;font-size:13px;}
+.tab-btn{padding:10px 20px;background:rgba(20,19,13,0.8);border:1px solid rgba(212,176,88,0.3);border-radius:8px;color:#8a7d5a;cursor:pointer;font-size:14px;transition:all 0.2s;}
+.tab-btn:hover{border-color:rgba(212,176,88,0.6);color:#d4b058;}
+.tab-btn.active{background:linear-gradient(135deg,#d4b058,#b8943f);color:#1a1810;font-weight:bold;border-color:#d4b058;}
 .msg{text-align:center;padding:10px;border-radius:6px;margin-bottom:15px;display:none;}
 .msg.success{background:rgba(46,204,113,0.2);color:#2ecc71;display:block;}
 .msg.error{background:rgba(231,76,60,0.2);color:#e74c3c;display:block;}
@@ -62,6 +65,14 @@ h1{text-align:center;color:#d4b058;margin:30px 0;font-size:24px;}
 
         <div class="stats" id="stats"></div>
 
+        <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;">
+            <button onclick="switchTab('generate')" id="btn-generate" class="tab-btn active">生成卡密</button>
+            <button onclick="switchTab('renew')" id="btn-renew" class="tab-btn">卡密续费</button>
+            <button onclick="switchTab('query')" id="btn-query" class="tab-btn">查询卡密</button>
+            <button onclick="switchTab('list')" id="btn-list" class="tab-btn">卡密列表</button>
+        </div>
+
+        <div id="tab-generate" class="tab-content">
         <div class="generate-box">
             <h3>生成新卡密</h3>
             <div id="genMsg" class="msg"></div>
@@ -73,14 +84,20 @@ h1{text-align:center;color:#d4b058;margin:30px 0;font-size:24px;}
                     <option value="permanent">永久卡</option>
                 </select>
                 <input type="number" id="cardCount" value="10" min="1" max="500" placeholder="生成数量">
+                <input type="text" id="customSuffix" placeholder="自定义后缀(4位，留空随机)" style="width:160px;" maxlength="4">
                 <button onclick="generateCards()">生成卡密</button>
             </div>
             <div class="new-cards" id="newCardsBox">
-                <h4>新生成的卡密（复制使用）</h4>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <h4 style="margin:0;">新生成的卡密（纯卡密，直接复制）</h4>
+                    <button onclick="copyNewCards()" style="background:rgba(46,204,113,0.2);border:1px solid rgba(46,204,113,0.4);color:#2ecc71;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:12px;">一键复制全部</button>
+                </div>
                 <textarea id="newCardsText" readonly></textarea>
             </div>
         </div>
+        </div>
 
+        <div id="tab-renew" class="tab-content" style="display:none;">
         <div class="generate-box">
             <h3>卡密续费</h3>
             <div id="renewMsg" class="msg"></div>
@@ -95,7 +112,9 @@ h1{text-align:center;color:#d4b058;margin:30px 0;font-size:24px;}
                 <button onclick="renewCard()">续费</button>
             </div>
         </div>
+        </div>
 
+        <div id="tab-query" class="tab-content" style="display:none;">
         <div class="generate-box">
             <h3>查询卡密</h3>
             <div id="queryMsg" class="msg"></div>
@@ -105,279 +124,19 @@ h1{text-align:center;color:#d4b058;margin:30px 0;font-size:24px;}
             </div>
             <div id="queryResult" style="display:none;background:rgba(20,19,13,0.5);border-radius:8px;padding:15px;margin-top:10px;font-size:13px;line-height:1.8;"></div>
         </div>
+        </div>
 
+        <div id="tab-list" class="tab-content" style="display:none;">
         <div class="cards-list">
             <h3>卡密列表 <button onclick="loadCards()">刷新</button></h3>
             <div id="cardsList"></div>
         </div>
+        </div>
     </div>
 </div>
 
-<script>
-const SUPABASE_URL = 'https://xrfzqlwrkidsblxofevj.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_9l8AW-w--GORou1AaAD95g_TOQrQ-0f';
-const ADMIN_PASSWORD = 'admin888'; // 管理员密码，你可以改
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+<script>eval(decodeURIComponent(escape(atob('DQoNCmNvbnN0IFNVUEFCQVNFX1VSTCA9ICdodHRwczovL3hyZnpxbHdya2lkc2JseG9mZXZqLnN1cGFiYXNlLmNvJzsNCmNvbnN0IFNVUEFCQVNFX0tFWSA9ICdzYl9wdWJsaXNoYWJsZV85bDhBVy13LS1HT1JvdTFBYUFEOTVnX1RPUXJRLTBmJzsNCmNvbnN0IEFETUlOX1BBU1NXT1JEID0gJ2FkbWluODg4JzsgDQpjb25zdCBzdXBhYmFzZUNsaWVudCA9IHN1cGFiYXNlLmNyZWF0ZUNsaWVudChTVVBBQkFTRV9VUkwsIFNVUEFCQVNFX0tFWSk7DQpjb25zdCBDSEFSUyA9ICdBQkNERUZHSEpLTE1OUFFSU1RVVldYWVoyMzQ1Njc4OSc7DQoNCmZ1bmN0aW9uIGdlbktleSgpIHsNCiAgICBsZXQga2V5ID0gJyc7DQogICAgZm9yIChsZXQgZyA9IDA7IGcgPCA0OyBnKyspIHsNCiAgICAgICAgZm9yIChsZXQgYyA9IDA7IGMgPCA0OyBjKyspIGtleSArPSBDSEFSU1tNYXRoLmZsb29yKE1hdGgucmFuZG9tKCkgKiBDSEFSUy5sZW5ndGgpXTsNCiAgICAgICAgaWYgKGcgPCAzKSBrZXkgKz0gJy0nOw0KICAgIH0NCiAgICByZXR1cm4ga2V5Ow0KfQ0KDQpmdW5jdGlvbiBzaG93TXNnKGlkLCB0ZXh0LCB0eXBlKSB7DQogICAgY29uc3QgZWwgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZChpZCk7DQogICAgZWwuaW5uZXJUZXh0ID0gdGV4dDsNCiAgICBlbC5jbGFzc05hbWUgPSAnbXNnICcgKyB0eXBlOw0KICAgIHNldFRpbWVvdXQoKCkgPT4geyBlbC5jbGFzc05hbWUgPSAnbXNnJzsgfSwgMzAwMCk7DQp9DQoNCmZ1bmN0aW9uIGRvTG9naW4oKSB7DQogICAgY29uc3QgcHdkID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2FkbWluUHdkJykudmFsdWU7DQogICAgaWYgKHB3ZCA9PT0gQURNSU5fUEFTU1dPUkQpIHsNCiAgICAgICAgbG9jYWxTdG9yYWdlLnNldEl0ZW0oJ2FkbWluX2xvZ2dlZCcsICcxJyk7DQogICAgICAgIGxvY2FsU3RvcmFnZS5zZXRJdGVtKCdhZG1pbl9sb2dnZWQnLCAnMScpOw0KICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnbG9naW5QYW5lbCcpLmNsYXNzTGlzdC5yZW1vdmUoJ2FjdGl2ZScpOw0KICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnYWRtaW5QYW5lbCcpLmNsYXNzTGlzdC5hZGQoJ2FjdGl2ZScpOw0KICAgICAgICBsb2FkU3RhdHMoKTsNCiAgICAgICAgbG9hZENhcmRzKCk7DQogICAgfSBlbHNlIHsNCiAgICAgICAgc2hvd01zZygnbG9naW5Nc2cnLCAn5a+G56CB6ZSZ6K+vJywgJ2Vycm9yJyk7DQogICAgfQ0KfQ0KDQpmdW5jdGlvbiBkb0xvZ291dCgpIHsNCiAgICBsb2NhbFN0b3JhZ2UucmVtb3ZlSXRlbSgnYWRtaW5fbG9nZ2VkJyk7DQogICAgbG9jYXRpb24ucmVsb2FkKCk7DQp9DQoNCmZ1bmN0aW9uIHN3aXRjaFRhYih0YWIpIHsNCiAgICBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCcudGFiLWNvbnRlbnQnKS5mb3JFYWNoKGVsID0+IGVsLnN0eWxlLmRpc3BsYXkgPSAnbm9uZScpOw0KICAgIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoJy50YWItYnRuJykuZm9yRWFjaChlbCA9PiBlbC5jbGFzc0xpc3QucmVtb3ZlKCdhY3RpdmUnKSk7DQogICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3RhYi0nICsgdGFiKS5zdHlsZS5kaXNwbGF5ID0gJ2Jsb2NrJzsNCiAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnYnRuLScgKyB0YWIpLmNsYXNzTGlzdC5hZGQoJ2FjdGl2ZScpOw0KICAgIGlmICh0YWIgPT09ICdsaXN0JykgbG9hZENhcmRzKCk7DQp9DQoNCg0KaWYgKGxvY2FsU3RvcmFnZS5nZXRJdGVtKCdhZG1pbl9sb2dnZWQnKSA9PT0gJzEnKSB7DQogICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2xvZ2luUGFuZWwnKS5jbGFzc0xpc3QucmVtb3ZlKCdhY3RpdmUnKTsNCiAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnYWRtaW5QYW5lbCcpLmNsYXNzTGlzdC5hZGQoJ2FjdGl2ZScpOw0KICAgIGxvYWRTdGF0cygpOw0KICAgIGxvYWRDYXJkcygpOw0KfQ0KDQphc3luYyBmdW5jdGlvbiBsb2FkU3RhdHMoKSB7DQogICAgdHJ5IHsNCiAgICAgICAgY29uc3QgeyBkYXRhLCBlcnJvciB9ID0gYXdhaXQgc3VwYWJhc2VDbGllbnQucnBjKCdnZXRfYWxsX2NhcmRzJywgeyBwX2FkbWluX3B3ZDogJ2FkbWluODg4JyB9KTsNCiAgICAgICAgaWYgKGVycm9yKSB0aHJvdyBlcnJvcjsNCiAgICAgICAgY29uc3QgY2FyZHMgPSBkYXRhIHx8IFtdOw0KICAgICAgICBjb25zdCB0b3RhbCA9IGNhcmRzLmxlbmd0aDsNCiAgICAgICAgY29uc3QgdXNlZCA9IGNhcmRzLmZpbHRlcihjID0+IGMudXNlZCkubGVuZ3RoOw0KICAgICAgICBjb25zdCBob3VycyA9IGNhcmRzLmZpbHRlcihjID0+IGMuY2FyZF90eXBlID09PSAnaG91cnMnKS5sZW5ndGg7DQogICAgICAgIGNvbnN0IGRheTEgPSBjYXJkcy5maWx0ZXIoYyA9PiBjLmNhcmRfdHlwZSA9PT0gJ2RheXMnICYmIGMuY2FyZF9kdXJhdGlvbiA9PT0gMSkubGVuZ3RoOw0KICAgICAgICBjb25zdCBkYXk3ID0gY2FyZHMuZmlsdGVyKGMgPT4gYy5jYXJkX3R5cGUgPT09ICdkYXlzJyAmJiBjLmNhcmRfZHVyYXRpb24gPT09IDcpLmxlbmd0aDsNCiAgICAgICAgY29uc3QgcGVybWFuZW50ID0gY2FyZHMuZmlsdGVyKGMgPT4gYy5jYXJkX3R5cGUgPT09ICdwZXJtYW5lbnQnKS5sZW5ndGg7DQoNCiAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3N0YXRzJykuaW5uZXJIVE1MID0gJzxkaXYgY2xhc3M9InN0YXQtYm94Ij48ZGl2IGNsYXNzPSJudW0iPicgKyB0b3RhbCArICc8L2Rpdj48ZGl2IGNsYXNzPSJsYWJlbCI+5oC75Y2h5a+GPC9kaXY+PC9kaXY+JyArDQogICAgICAgICAgICAnPGRpdiBjbGFzcz0ic3RhdC1ib3giPjxkaXYgY2xhc3M9Im51bSI+JyArIHVzZWQgKyAnPC9kaXY+PGRpdiBjbGFzcz0ibGFiZWwiPuW3suS9v+eUqDwvZGl2PjwvZGl2PicgKw0KICAgICAgICAgICAgJzxkaXYgY2xhc3M9InN0YXQtYm94Ij48ZGl2IGNsYXNzPSJudW0iPicgKyBob3VycyArICc8L2Rpdj48ZGl2IGNsYXNzPSJsYWJlbCI+MuWwj+aXtuWNoTwvZGl2PjwvZGl2PicgKw0KICAgICAgICAgICAgJzxkaXYgY2xhc3M9InN0YXQtYm94Ij48ZGl2IGNsYXNzPSJudW0iPicgKyBkYXkxICsgJzwvZGl2PjxkaXYgY2xhc3M9ImxhYmVsIj4x5aSp5Y2hPC9kaXY+PC9kaXY+JyArDQogICAgICAgICAgICAnPGRpdiBjbGFzcz0ic3RhdC1ib3giPjxkaXYgY2xhc3M9Im51bSI+JyArIGRheTcgKyAnPC9kaXY+PGRpdiBjbGFzcz0ibGFiZWwiPjflpKnljaE8L2Rpdj48L2Rpdj4nICsNCiAgICAgICAgICAgICc8ZGl2IGNsYXNzPSJzdGF0LWJveCI+PGRpdiBjbGFzcz0ibnVtIj4nICsgcGVybWFuZW50ICsgJzwvZGl2PjxkaXYgY2xhc3M9ImxhYmVsIj7msLjkuYXljaE8L2Rpdj48L2Rpdj4nOw0KICAgIH0gY2F0Y2ggKGUpIHsNCiAgICAgICAgY29uc29sZS5lcnJvcihlKTsNCiAgICB9DQp9DQoNCmFzeW5jIGZ1bmN0aW9uIGdlbmVyYXRlQ2FyZHMoKSB7DQogICAgY29uc3QgdHlwZVNlbCA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdjYXJkVHlwZScpLnZhbHVlOw0KICAgIGNvbnN0IGNvdW50ID0gcGFyc2VJbnQoZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2NhcmRDb3VudCcpLnZhbHVlKTsNCiAgICBjb25zdCBjdXN0b21TdWZmaXggPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnY3VzdG9tU3VmZml4JykudmFsdWUudHJpbSgpOw0KICAgIGlmICghY291bnQgfHwgY291bnQgPCAxKSB7IHNob3dNc2coJ2dlbk1zZycsICfor7fovpPlhaXmnInmlYjmlbDph48nLCAnZXJyb3InKTsgcmV0dXJuOyB9DQoNCiAgICBsZXQgY2FyZFR5cGUsIGNhcmREdXJhdGlvbjsNCiAgICBpZiAodHlwZVNlbCA9PT0gJ2hvdXJzJykgeyBjYXJkVHlwZSA9ICdob3Vycyc7IGNhcmREdXJhdGlvbiA9IDI7IH0NCiAgICBlbHNlIGlmICh0eXBlU2VsID09PSAnZGF5c18xJykgeyBjYXJkVHlwZSA9ICdkYXlzJzsgY2FyZER1cmF0aW9uID0gMTsgfQ0KICAgIGVsc2UgaWYgKHR5cGVTZWwgPT09ICdkYXlzXzcnKSB7IGNhcmRUeXBlID0gJ2RheXMnOyBjYXJkRHVyYXRpb24gPSA3OyB9DQogICAgZWxzZSB7IGNhcmRUeXBlID0gJ3Blcm1hbmVudCc7IGNhcmREdXJhdGlvbiA9IDA7IH0NCg0KICAgIHRyeSB7DQogICAgICAgIGNvbnN0IHsgZGF0YSwgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlQ2xpZW50LnJwYygnZ2VuZXJhdGVfY2FyZHMnLCB7IA0KICAgICAgICAgICAgcF9jYXJkX3R5cGU6IGNhcmRUeXBlLCANCiAgICAgICAgICAgIHBfZHVyYXRpb246IGNhcmREdXJhdGlvbiwgDQogICAgICAgICAgICBwX2NvdW50OiBjb3VudCwgDQogICAgICAgICAgICBwX2FkbWluX3B3ZDogJ2FkbWluODg4JywNCiAgICAgICAgICAgIHBfc3VmZml4OiBjdXN0b21TdWZmaXgNCiAgICAgICAgfSk7DQogICAgICAgIGlmIChlcnJvcikgdGhyb3cgZXJyb3I7DQoNCiAgICAgICAgY29uc3QgdHlwZU5hbWUgPSBjYXJkVHlwZSA9PT0gJ2hvdXJzJyA/ICcy5bCP5pe25Y2hJyA6IChjYXJkVHlwZSA9PT0gJ3Blcm1hbmVudCcgPyAn5rC45LmF5Y2hJyA6IChjYXJkRHVyYXRpb24gPT09IDEgPyAnMeWkqeWNoScgOiAnN+WkqeWNoScpKTsNCiAgICAgICAgc2hvd01zZygnZ2VuTXNnJywgJ+aIkOWKn+eUn+aIkCcgKyBjb3VudCArICflvKAnICsgdHlwZU5hbWUsICdzdWNjZXNzJyk7DQoNCiAgICAgICAgY29uc3QgbmV3Q2FyZHMgPSBkYXRhIHx8IFtdOw0KICAgICAgICAKICAgICAgICBjb25zdCB0ZXh0ID0gbmV3Q2FyZHMubWFwKGMgPT4gYy5jYXJkX2tleSkuam9pbignXG4nKTsNCiAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ25ld0NhcmRzVGV4dCcpLnZhbHVlID0gdGV4dDsNCiAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ25ld0NhcmRzQm94Jykuc3R5bGUuZGlzcGxheSA9ICdibG9jayc7DQoNCiAgICAgICAgCiAgICAgICAgY29uc3QgYmxvYiA9IG5ldyBCbG9iKFt0ZXh0XSwge3R5cGU6ICd0ZXh0L3BsYWluO2NoYXJzZXQ9dXRmLTgnfSk7DQogICAgICAgIGNvbnN0IHVybCA9IFVSTC5jcmVhdGVPYmplY3RVUkwoYmxvYik7DQogICAgICAgIGNvbnN0IGEgPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KCdhJyk7DQogICAgICAgIGEuaHJlZiA9IHVybDsNCiAgICAgICAgYS5kb3dubG9hZCA9ICfljaHlr4ZfJyArIHR5cGVOYW1lICsgJ18nICsgY291bnQgKyAn5bygXycgKyBuZXcgRGF0ZSgpLnRvTG9jYWxlRGF0ZVN0cmluZygnemgtQ04nKS5yZXBsYWNlQWxsKCcvJywgJy0nKSArICcudHh0JzsNCiAgICAgICAgZG9jdW1lbnQuYm9keS5hcHBlbmRDaGlsZChhKTsNCiAgICAgICAgYS5jbGljaygpOw0KICAgICAgICBkb2N1bWVudC5ib2R5LnJlbW92ZUNoaWxkKGEpOw0KICAgICAgICBVUkwucmV2b2tlT2JqZWN0VVJMKHVybCk7DQoNCiAgICAgICAgbG9hZFN0YXRzKCk7DQogICAgICAgIGxvYWRDYXJkcygpOw0KICAgIH0gY2F0Y2ggKGUpIHsNCiAgICAgICAgc2hvd01zZygnZ2VuTXNnJywgJ+eUn+aIkOWksei0pTogJyArIGUubWVzc2FnZSwgJ2Vycm9yJyk7DQogICAgfQ0KfQ0KDQpmdW5jdGlvbiBjb3B5TmV3Q2FyZHMoKSB7DQogICAgY29uc3QgdGV4dCA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCduZXdDYXJkc1RleHQnKS52YWx1ZTsNCiAgICBpZiAoIXRleHQpIHJldHVybjsNCiAgICBuYXZpZ2F0b3IuY2xpcGJvYXJkLndyaXRlVGV4dCh0ZXh0KS50aGVuKCgpID0+IHsNCiAgICAgICAgc2hvd01zZygnZ2VuTXNnJywgJ+W3suWkjeWItuWFqOmDqOWNoeWvhicsICdzdWNjZXNzJyk7DQogICAgfSkuY2F0Y2goKCkgPT4gew0KICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnbmV3Q2FyZHNUZXh0Jykuc2VsZWN0KCk7DQogICAgICAgIGRvY3VtZW50LmV4ZWNDb21tYW5kKCdjb3B5Jyk7DQogICAgICAgIHNob3dNc2coJ2dlbk1zZycsICflt7LlpI3liLblhajpg6jljaHlr4YnLCAnc3VjY2VzcycpOw0KICAgIH0pOw0KfQ0KDQphc3luYyBmdW5jdGlvbiByZW5ld0NhcmQoKSB7DQogICAgY29uc3Qga2V5ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3JlbmV3S2V5JykudmFsdWUudHJpbSgpLnRvVXBwZXJDYXNlKCk7DQogICAgY29uc3QgdHlwZVNlbCA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdyZW5ld1R5cGUnKS52YWx1ZTsNCiAgICBpZiAoIWtleSkgeyBzaG93TXNnKCdyZW5ld01zZycsICfor7fovpPlhaXljaHlr4YnLCAnZXJyb3InKTsgcmV0dXJuOyB9DQoNCiAgICB0cnkgew0KICAgICAgICBjb25zdCB7IGRhdGEsIGVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZUNsaWVudC5ycGMoJ3JlbmV3X2NhcmQnLCB7IHBfY2FyZF9rZXk6IGtleSwgcF9yZW5ld190eXBlOiB0eXBlU2VsLCBwX2FkbWluX3B3ZDogJ2FkbWluODg4JyB9KTsNCiAgICAgICAgaWYgKGVycm9yKSB0aHJvdyBlcnJvcjsNCiAgICAgICAgY29uc3QgcmVzdWx0ID0gZGF0YVswXTsNCiAgICAgICAgaWYgKCFyZXN1bHQuc3VjY2Vzcykgew0KICAgICAgICAgICAgc2hvd01zZygncmVuZXdNc2cnLCByZXN1bHQubWVzc2FnZSwgJ2Vycm9yJyk7DQogICAgICAgICAgICByZXR1cm47DQogICAgICAgIH0NCiAgICAgICAgY29uc3QgdHlwZU5hbWUgPSB0eXBlU2VsID09PSAnaG91cnMnID8gJzLlsI/ml7YnIDogKHR5cGVTZWwgPT09ICdkYXlzXzEnID8gJzHlpKknIDogKHR5cGVTZWwgPT09ICdkYXlzXzcnID8gJzflpKknIDogJ+awuOS5hScpKTsNCiAgICAgICAgc2hvd01zZygncmVuZXdNc2cnLCAn57ut6LS55oiQ5Yqf77yB5bey5bu26ZW/JyArIHR5cGVOYW1lICsgJ++8jOaWsOWIsOacn++8micgKyBuZXcgRGF0ZShyZXN1bHQubmV3X2V4cGlyZXNfYXQpLnRvTG9jYWxlU3RyaW5nKCd6aC1DTicpLCAnc3VjY2VzcycpOw0KICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgncmVuZXdLZXknKS52YWx1ZSA9ICcnOw0KICAgICAgICBsb2FkU3RhdHMoKTsNCiAgICAgICAgbG9hZENhcmRzKCk7DQogICAgfSBjYXRjaCAoZSkgew0KICAgICAgICBzaG93TXNnKCdyZW5ld01zZycsICfnu63otLnlpLHotKU6ICcgKyBlLm1lc3NhZ2UsICdlcnJvcicpOw0KICAgIH0NCn0NCg0KYXN5bmMgZnVuY3Rpb24gcXVlcnlDYXJkKCkgew0KICAgIGNvbnN0IGtleSA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdxdWVyeUtleScpLnZhbHVlLnRyaW0oKS50b1VwcGVyQ2FzZSgpOw0KICAgIGNvbnN0IHJlc3VsdEJveCA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdxdWVyeVJlc3VsdCcpOw0KICAgIGlmICgha2V5KSB7IHNob3dNc2coJ3F1ZXJ5TXNnJywgJ+ivt+i+k+WFpeWNoeWvhicsICdlcnJvcicpOyByZXR1cm47IH0NCg0KICAgIHRyeSB7DQogICAgICAgIGNvbnN0IHsgZGF0YSwgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlQ2xpZW50LnJwYygncXVlcnlfY2FyZCcsIHsgcF9jYXJkX2tleToga2V5IH0pOw0KICAgICAgICBpZiAoZXJyb3IpIHRocm93IGVycm9yOw0KICAgICAgICBjb25zdCByID0gZGF0YVswXTsNCg0KICAgICAgICBpZiAoIXIuY2FyZF9leGlzdHMpIHsNCiAgICAgICAgICAgIHJlc3VsdEJveC5zdHlsZS5kaXNwbGF5ID0gJ2Jsb2NrJzsNCiAgICAgICAgICAgIHJlc3VsdEJveC5pbm5lckhUTUwgPSAnPHAgc3R5bGU9ImNvbG9yOiNlNzRjM2M7Ij7inYwg6K+l5Y2h5a+G5LiN5a2Y5ZyoPC9wPic7DQogICAgICAgICAgICByZXR1cm47DQogICAgICAgIH0NCg0KICAgICAgICBjb25zdCB0eXBlTmFtZSA9IHIuY2FyZF90eXBlID09PSAnaG91cnMnID8gci5jYXJkX2R1cmF0aW9uICsgJ+Wwj+aXtuWNoScgOiAoci5jYXJkX3R5cGUgPT09ICdwZXJtYW5lbnQnID8gJ+awuOS5heWNoe+8iDk5OTnlpKnvvIknIDogci5jYXJkX2R1cmF0aW9uICsgJ+WkqeWNoScpOw0KICAgICAgICBsZXQgaHRtbCA9ICc8cD48c3Ryb25nPuWNoeWvhu+8mjwvc3Ryb25nPicgKyBrZXkgKyAnPC9wPic7DQogICAgICAgIGh0bWwgKz0gJzxwPjxzdHJvbmc+57G75Z6L77yaPC9zdHJvbmc+JyArIHR5cGVOYW1lICsgJzwvcD4nOw0KICAgICAgICBodG1sICs9ICc8cD48c3Ryb25nPuWIm+W7uuaXtumXtO+8mjwvc3Ryb25nPicgKyBuZXcgRGF0ZShyLmNyZWF0ZWRfYXQpLnRvTG9jYWxlU3RyaW5nKCd6aC1DTicpICsgJzwvcD4nOw0KDQogICAgICAgIGlmIChyLnVzZWQpIHsNCiAgICAgICAgICAgIGNvbnN0IGlzRXhwaXJlZCA9IG5ldyBEYXRlKHIuZXhwaXJlc19hdCkgPCBuZXcgRGF0ZSgpOw0KICAgICAgICAgICAgY29uc3QgcmVtYWluTXMgPSBuZXcgRGF0ZShyLmV4cGlyZXNfYXQpIC0gRGF0ZS5ub3coKTsNCiAgICAgICAgICAgIGh0bWwgKz0gJzxociBzdHlsZT0iYm9yZGVyLWNvbG9yOnJnYmEoMjEyLDE3Niw4OCwwLjIpO21hcmdpbjoxMHB4IDA7Ij4nOw0KICAgICAgICAgICAgaHRtbCArPSAnPHAgc3R5bGU9ImNvbG9yOiMyZWNjNzE7Ij48c3Ryb25nPuKchSDlt7Lkvb/nlKg8L3N0cm9uZz48L3A+JzsNCiAgICAgICAgICAgIGh0bWwgKz0gJzxwPjxzdHJvbmc+57uR5a6a6K6+5aSH77yaPC9zdHJvbmc+JyArIHIuZGV2aWNlX2lkICsgJzwvcD4nOw0KICAgICAgICAgICAgaHRtbCArPSAnPHA+PHN0cm9uZz7mv4DmtLvml7bpl7TvvJo8L3N0cm9uZz4nICsgbmV3IERhdGUoci5hY3RpdmF0ZWRfYXQpLnRvTG9jYWxlU3RyaW5nKCd6aC1DTicpICsgJzwvcD4nOw0KICAgICAgICAgICAgaHRtbCArPSAnPHA+PHN0cm9uZz7liLDmnJ/ml7bpl7TvvJo8L3N0cm9uZz4nICsgbmV3IERhdGUoci5leHBpcmVzX2F0KS50b0xvY2FsZVN0cmluZygnemgtQ04nKSArICc8L3A+JzsNCiAgICAgICAgICAgIGlmIChpc0V4cGlyZWQpIHsNCiAgICAgICAgICAgICAgICBodG1sICs9ICc8cCBzdHlsZT0iY29sb3I6I2U3NGMzYzsiPjxzdHJvbmc+54q25oCB77ya5bey6L+H5pyfPC9zdHJvbmc+PC9wPic7DQogICAgICAgICAgICB9IGVsc2Ugew0KICAgICAgICAgICAgICAgIGNvbnN0IGQgPSBNYXRoLmZsb29yKHJlbWFpbk1zIC8gODY0MDAwMDApOw0KICAgICAgICAgICAgICAgIGNvbnN0IGggPSBNYXRoLmZsb29yKChyZW1haW5NcyAlIDg2NDAwMDAwKSAvIDM2MDAwMDApOw0KICAgICAgICAgICAgICAgIGNvbnN0IG0gPSBNYXRoLmZsb29yKChyZW1haW5NcyAlIDM2MDAwMDApIC8gNjAwMDApOw0KICAgICAgICAgICAgICAgIGh0bWwgKz0gJzxwIHN0eWxlPSJjb2xvcjojMmVjYzcxOyI+PHN0cm9uZz7liankvZnvvJo8L3N0cm9uZz4nICsgZCArICflpKknICsgaCArICfml7YnICsgbSArICfliIY8L3A+JzsNCiAgICAgICAgICAgIH0NCiAgICAgICAgfSBlbHNlIHsNCiAgICAgICAgICAgIGh0bWwgKz0gJzxociBzdHlsZT0iYm9yZGVyLWNvbG9yOnJnYmEoMjEyLDE3Niw4OCwwLjIpO21hcmdpbjoxMHB4IDA7Ij4nOw0KICAgICAgICAgICAgaHRtbCArPSAnPHAgc3R5bGU9ImNvbG9yOiNmNWE2MjM7Ij48c3Ryb25nPuKPsyDmnKrkvb/nlKg8L3N0cm9uZz48L3A+JzsNCiAgICAgICAgfQ0KDQogICAgICAgIHJlc3VsdEJveC5zdHlsZS5kaXNwbGF5ID0gJ2Jsb2NrJzsNCiAgICAgICAgcmVzdWx0Qm94LmlubmVySFRNTCA9IGh0bWw7DQogICAgfSBjYXRjaCAoZSkgew0KICAgICAgICBzaG93TXNnKCdxdWVyeU1zZycsICfmn6Xor6LlpLHotKU6ICcgKyBlLm1lc3NhZ2UsICdlcnJvcicpOw0KICAgIH0NCn0NCg0KYXN5bmMgZnVuY3Rpb24gZGVsZXRlQ2FyZChrZXkpIHsNCiAgICBpZiAoIWNvbmZpcm0oJ+ehruWumuimgeWIoOmZpOWNoeWvhiAnICsga2V5ICsgJyDlkJfvvJ/liKDpmaTlkI7ml6Dms5XmgaLlpI3vvIEnKSkgcmV0dXJuOw0KICAgIHRyeSB7DQogICAgICAgIGNvbnN0IHsgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlQ2xpZW50LnJwYygnZGVsZXRlX2NhcmQnLCB7IHBfY2FyZF9rZXk6IGtleSwgcF9hZG1pbl9wd2Q6ICdhZG1pbjg4OCcgfSk7DQogICAgICAgIGlmIChlcnJvcikgdGhyb3cgZXJyb3I7DQogICAgICAgIGNvbnN0IGVsID0gZG9jdW1lbnQucXVlcnlTZWxlY3RvcignW2RhdGEta2V5PSInICsga2V5ICsgJyJdJyk7DQogICAgICAgIGlmIChlbCkgZWwucmVtb3ZlKCk7DQogICAgICAgIGxvYWRTdGF0cygpOw0KICAgIH0gY2F0Y2ggKGUpIHsNCiAgICAgICAgYWxlcnQoJ+WIoOmZpOWksei0pTogJyArIGUubWVzc2FnZSk7DQogICAgfQ0KfQ0KDQphc3luYyBmdW5jdGlvbiBsb2FkQ2FyZHMoKSB7DQogICAgdHJ5IHsNCiAgICAgICAgY29uc3QgeyBkYXRhLCBlcnJvciB9ID0gYXdhaXQgc3VwYWJhc2VDbGllbnQucnBjKCdnZXRfYWxsX2NhcmRzJywgeyBwX2FkbWluX3B3ZDogJ2FkbWluODg4JyB9KTsNCiAgICAgICAgaWYgKGVycm9yKSB0aHJvdyBlcnJvcjsNCiAgICAgICAgY29uc3QgY2FyZHMgPSBkYXRhIHx8IFtdOw0KICAgICAgICBsZXQgaHRtbCA9ICcnOw0KICAgICAgICBjYXJkcy5mb3JFYWNoKGMgPT4gew0KICAgICAgICAgICAgY29uc3QgdHlwZU5hbWUgPSBjLmNhcmRfdHlwZSA9PT0gJ2hvdXJzJyA/IGMuY2FyZF9kdXJhdGlvbiArICflsI/ml7YnIDogKGMuY2FyZF90eXBlID09PSAncGVybWFuZW50JyA/ICfmsLjkuYUnIDogYy5jYXJkX2R1cmF0aW9uICsgJ+WkqScpOw0KICAgICAgICAgICAgaHRtbCArPSAnPGRpdiBjbGFzcz0iY2FyZC1pdGVtIiBkYXRhLWtleT0iJyArIGMuY2FyZF9rZXkgKyAnIj4nOw0KICAgICAgICAgICAgaHRtbCArPSAnPHNwYW4gY2xhc3M9ImtleSI+JyArIGMuY2FyZF9rZXkgKyAnPC9zcGFuPic7DQogICAgICAgICAgICBodG1sICs9ICc8c3BhbiBjbGFzcz0idHlwZSI+JyArIHR5cGVOYW1lICsgJzwvc3Bhbj4nOw0KICAgICAgICAgICAgaHRtbCArPSAnPHNwYW4gY2xhc3M9InN0YXR1cyAnICsgKGMudXNlZCA/ICd1c2VkJyA6ICd1bnVzZWQnKSArICciPicgKyAoYy51c2VkID8gJ+W3suS9v+eUqCcgOiAn5pyq5L2/55SoJykgKyAnPC9zcGFuPic7DQogICAgICAgICAgICBodG1sICs9ICc8YnV0dG9uIG9uY2xpY2s9ImRlbGV0ZUNhcmQoXCcnICsgYy5jYXJkX2tleSArICdcJykiIHN0eWxlPSJiYWNrZ3JvdW5kOnJnYmEoMjMxLDc2LDYwLDAuMik7Ym9yZGVyOjFweCBzb2xpZCByZ2JhKDIzMSw3Niw2MCwwLjQpO2NvbG9yOiNlNzRjM2M7Ym9yZGVyLXJhZGl1czo0cHg7cGFkZGluZzoycHggOHB4O2N1cnNvcjpwb2ludGVyO2ZvbnQtc2l6ZToxMXB4OyI+5Yig6ZmkPC9idXR0b24+JzsNCiAgICAgICAgICAgIGh0bWwgKz0gJzwvZGl2Pic7DQogICAgICAgIH0pOw0KICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnY2FyZHNMaXN0JykuaW5uZXJIVE1MID0gaHRtbCB8fCAnPHAgc3R5bGU9InRleHQtYWxpZ246Y2VudGVyO2NvbG9yOiM4YTdkNWE7Ij7mmoLml6DljaHlr4Y8L3A+JzsNCiAgICB9IGNhdGNoIChlKSB7DQogICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdjYXJkc0xpc3QnKS5pbm5lckhUTUwgPSAnPHAgc3R5bGU9ImNvbG9yOiNlNzRjM2M7Ij7liqDovb3lpLHotKU8L3A+JzsNCiAgICB9DQp9DQoNCg=='))));</script>
 
-function genKey() {
-    let key = '';
-    for (let g = 0; g < 4; g++) {
-        for (let c = 0; c < 4; c++) key += CHARS[Math.floor(Math.random() * CHARS.length)];
-        if (g < 3) key += '-';
-    }
-    return key;
-}
-
-function showMsg(id, text, type) {
-    const el = document.getElementById(id);
-    el.innerText = text;
-    el.className = 'msg ' + type;
-    setTimeout(() => { el.className = 'msg'; }, 3000);
-}
-
-function doLogin() {
-    const pwd = document.getElementById('adminPwd').value;
-    if (pwd === ADMIN_PASSWORD) {
-        sessionStorage.setItem('admin_logged', '1');
-        document.getElementById('loginPanel').classList.remove('active');
-        document.getElementById('adminPanel').classList.add('active');
-        loadStats();
-        loadCards();
-    } else {
-        showMsg('loginMsg', '密码错误', 'error');
-    }
-}
-
-function doLogout() {
-    sessionStorage.removeItem('admin_logged');
-    location.reload();
-}
-
-// 检查登录状态
-if (sessionStorage.getItem('admin_logged') === '1') {
-    document.getElementById('loginPanel').classList.remove('active');
-    document.getElementById('adminPanel').classList.add('active');
-    loadStats();
-    loadCards();
-}
-
-async function loadStats() {
-    try {
-        const { data: cards } = await supabaseClient.from('cards').select('card_type,card_duration');
-        const { data: bindings } = await supabaseClient.from('card_bindings').select('card_key');
-        const usedKeys = new Set(bindings.map(b => b.card_key));
-
-        const total = cards.length;
-        const used = cards.filter(c => usedKeys.has(c.card_key)).length;
-        const hours = cards.filter(c => c.card_type === 'hours').length;
-        const day1 = cards.filter(c => c.card_type === 'days' && c.card_duration === 1).length;
-        const day7 = cards.filter(c => c.card_type === 'days' && c.card_duration === 7).length;
-        const permanent = cards.filter(c => c.card_type === 'permanent').length;
-
-        document.getElementById('stats').innerHTML = `
-            <div class="stat-box"><div class="num">${total}</div><div class="label">总卡密</div></div>
-            <div class="stat-box"><div class="num">${used}</div><div class="label">已使用</div></div>
-            <div class="stat-box"><div class="num">${hours}</div><div class="label">2小时卡</div></div>
-            <div class="stat-box"><div class="num">${day1}</div><div class="label">1天卡</div></div>
-            <div class="stat-box"><div class="num">${day7}</div><div class="label">7天卡</div></div>
-            <div class="stat-box"><div class="num">${permanent}</div><div class="label">永久卡</div></div>
-        `;
-    } catch (e) {
-        console.error(e);
-    }
-}
-
-async function generateCards() {
-    const typeSel = document.getElementById('cardType').value;
-    const count = parseInt(document.getElementById('cardCount').value);
-    if (!count || count < 1) { showMsg('genMsg', '请输入有效数量', 'error'); return; }
-
-    let cardType, cardDuration;
-    if (typeSel === 'hours') { cardType = 'hours'; cardDuration = 2; }
-    else if (typeSel === 'days_1') { cardType = 'days'; cardDuration = 1; }
-    else if (typeSel === 'days_7') { cardType = 'days'; cardDuration = 7; }
-    else { cardType = 'permanent'; cardDuration = 0; }
-
-    const newCards = [];
-    for (let i = 0; i < count; i++) {
-        newCards.push({ card_key: genKey(), card_type: cardType, card_duration: cardDuration });
-    }
-
-    try {
-        const { error } = await supabaseClient.from('cards').insert(newCards);
-        if (error) throw error;
-
-        const typeName = cardType === 'hours' ? '2小时卡' : (cardType === 'permanent' ? '永久卡' : (cardDuration === 1 ? '1天卡' : '7天卡'));
-        showMsg('genMsg', `成功生成${count}张${typeName}`, 'success');
-
-        const text = newCards.map((c, i) => `${(i+1).toString().padStart(3,'0')}. ${c.card_key}`).join('\n');
-        document.getElementById('newCardsText').value = text;
-        document.getElementById('newCardsBox').style.display = 'block';
-
-        // 自动下载txt文件
-        const blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `卡密_${typeName}_${count}张_${new Date().toLocaleDateString('zh-CN').replace(/\//g,'-')}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        loadStats();
-        loadCards();
-    } catch (e) {
-        showMsg('genMsg', '生成失败: ' + e.message, 'error');
-    }
-}
-
-async function renewCard() {
-    const key = document.getElementById('renewKey').value.trim().toUpperCase();
-    const typeSel = document.getElementById('renewType').value;
-    if (!key) { showMsg('renewMsg', '请输入卡密', 'error'); return; }
-
-    let addMs;
-    if (typeSel === 'hours') addMs = 2 * 3600000;
-    else if (typeSel === 'days_1') addMs = 86400000;
-    else if (typeSel === 'days_7') addMs = 7 * 86400000;
-    else addMs = 9999 * 86400000;
-
-    try {
-        // 查绑定记录
-        const { data: binding, error } = await supabaseClient
-            .from('card_bindings')
-            .select('*')
-            .eq('card_key', key)
-            .single();
-
-        if (error || !binding) {
-            showMsg('renewMsg', '该卡密未被激活，无法续费', 'error');
-            return;
-        }
-
-        // 计算新的过期时间：没过期就加，过期了就从现在算
-        const oldExpire = new Date(binding.expires_at).getTime();
-        const now = Date.now();
-        const baseTime = oldExpire > now ? oldExpire : now;
-        const newExpire = new Date(baseTime + addMs).toISOString();
-
-        // 更新
-        const { error: updateError } = await supabaseClient
-            .from('card_bindings')
-            .update({ expires_at: newExpire })
-            .eq('card_key', key);
-
-        if (updateError) throw updateError;
-
-        const typeName = typeSel === 'hours' ? '2小时' : (typeSel === 'days_1' ? '1天' : (typeSel === 'days_7' ? '7天' : '永久'));
-        showMsg('renewMsg', `续费成功！已延长${typeName}，新到期：${new Date(newExpire).toLocaleString('zh-CN')}`, 'success');
-        document.getElementById('renewKey').value = '';
-        loadStats();
-        loadCards();
-    } catch (e) {
-        showMsg('renewMsg', '续费失败: ' + e.message, 'error');
-    }
-}
-
-async function queryCard() {
-    const key = document.getElementById('queryKey').value.trim().toUpperCase();
-    const resultBox = document.getElementById('queryResult');
-    if (!key) { showMsg('queryMsg', '请输入卡密', 'error'); return; }
-
-    try {
-        // 查卡密信息
-        const { data: card, error: cardError } = await supabaseClient
-            .from('cards')
-            .select('*')
-            .eq('card_key', key)
-            .single();
-
-        if (cardError || !card) {
-            resultBox.style.display = 'block';
-            resultBox.innerHTML = '<p style="color:#e74c3c;">❌ 该卡密不存在</p>';
-            return;
-        }
-
-        // 查绑定记录
-        const { data: binding } = await supabaseClient
-            .from('card_bindings')
-            .select('*')
-            .eq('card_key', key)
-            .single();
-
-        const typeName = card.card_type === 'hours' ? card.card_duration + '小时卡' :
-                          (card.card_type === 'permanent' ? '永久卡（9999天）' : card.card_duration + '天卡');
-
-        let html = '<p><strong>卡密：</strong>' + card.card_key + '</p>';
-        html += '<p><strong>类型：</strong>' + typeName + '</p>';
-        html += '<p><strong>创建时间：</strong>' + new Date(card.created_at).toLocaleString('zh-CN') + '</p>';
-
-        if (binding) {
-            const isExpired = new Date(binding.expires_at) < new Date();
-            const remainMs = new Date(binding.expires_at) - Date.now();
-            html += '<hr style="border-color:rgba(212,176,88,0.2);margin:10px 0;">';
-            html += '<p style="color:#2ecc71;"><strong>✅ 已使用</strong></p>';
-            html += '<p><strong>绑定设备：</strong>' + binding.device_id + '</p>';
-            html += '<p><strong>激活时间：</strong>' + new Date(binding.activated_at).toLocaleString('zh-CN') + '</p>';
-            html += '<p><strong>到期时间：</strong>' + new Date(binding.expires_at).toLocaleString('zh-CN') + '</p>';
-            if (isExpired) {
-                html += '<p style="color:#e74c3c;"><strong>状态：已过期</strong></p>';
-            } else {
-                const d = Math.floor(remainMs / 86400000);
-                const h = Math.floor((remainMs % 86400000) / 3600000);
-                const m = Math.floor((remainMs % 3600000) / 60000);
-                html += '<p style="color:#2ecc71;"><strong>剩余：</strong>' + d + '天' + h + '时' + m + '分</p>';
-            }
-        } else {
-            html += '<hr style="border-color:rgba(212,176,88,0.2);margin:10px 0;">';
-            html += '<p style="color:#f5a623;"><strong>⏳ 未使用</strong></p>';
-        }
-
-        resultBox.style.display = 'block';
-        resultBox.innerHTML = html;
-    } catch (e) {
-        showMsg('queryMsg', '查询失败: ' + e.message, 'error');
-    }
-}
-
-async function deleteCard(key) {
-    if (!confirm('确定要删除卡密 ' + key + ' 吗？删除后无法恢复！')) return;
-    try {
-        await supabaseClient.from('card_bindings').delete().eq('card_key', key);
-        await supabaseClient.from('cards').delete().eq('card_key', key);
-        // 立即从页面移除
-        const el = document.querySelector('[data-key="' + key + '"]');
-        if (el) el.remove();
-        loadStats();
-    } catch (e) {
-        alert('删除失败: ' + e.message);
-    }
-}
-
-async function loadCards() {
-    try {
-        const { data: cards } = await supabaseClient.from('cards').select('*').order('created_at', { ascending: false });
-        const { data: bindings } = await supabaseClient.from('card_bindings').select('card_key');
-        const usedKeys = new Set(bindings.map(b => b.card_key));
-
-        let html = '';
-        cards.forEach(c => {
-            const typeName = c.card_type === 'hours' ? c.card_duration + '小时' : (c.card_type === 'permanent' ? '永久' : c.card_duration + '天');
-            const used = usedKeys.has(c.card_key);
-            html += `<div class="card-item" data-key="${c.card_key}">
-                <span class="key">${c.card_key}</span>
-                <span class="type">${typeName}</span>
-                <span class="status ${used ? 'used' : 'unused'}">${used ? '已使用' : '未使用'}</span>
-                <button onclick="deleteCard('${c.card_key}')" style="background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;">删除</button>
-            </div>`;
-        });
-        document.getElementById('cardsList').innerHTML = html || '<p style="text-align:center;color:#8a7d5a;">暂无卡密</p>';
-    } catch (e) {
-        document.getElementById('cardsList').innerHTML = '<p style="color:#e74c3c;">加载失败</p>';
-    }
-}
-</script>
+<script>eval(decodeURIComponent(escape(atob('DQpkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKCdjb250ZXh0bWVudScsIGUgPT4gZS5wcmV2ZW50RGVmYXVsdCgpKTsNCmRvY3VtZW50LmFkZEV2ZW50TGlzdGVuZXIoJ2tleWRvd24nLCBlID0+IHsNCiAgICBpZiAoZS5rZXkgPT09ICdGMTInIHx8IChlLmN0cmxLZXkgJiYgZS5zaGlmdEtleSAmJiAoZS5rZXkgPT09ICdJJyB8fCBlLmtleSA9PT0gJ0onKSkgfHwgKGUuY3RybEtleSAmJiAoZS5rZXkgPT09ICd1JyB8fCBlLmtleSA9PT0gJ1UnKSkpIHsNCiAgICAgICAgZS5wcmV2ZW50RGVmYXVsdCgpOw0KICAgIH0NCn0pOw0K'))));</script>
 </body>
 </html>
