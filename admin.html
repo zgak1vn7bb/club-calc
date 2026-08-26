@@ -70,6 +70,7 @@ h1{text-align:center;color:#d4b058;margin:30px 0;font-size:24px;}
                     <option value="hours">2小时卡</option>
                     <option value="days_1">1天卡</option>
                     <option value="days_7">7天卡</option>
+                    <option value="permanent">永久卡</option>
                 </select>
                 <input type="number" id="cardCount" value="10" min="1" max="500" placeholder="生成数量">
                 <button onclick="generateCards()">生成卡密</button>
@@ -147,6 +148,7 @@ async function loadStats() {
         const hours = cards.filter(c => c.card_type === 'hours').length;
         const day1 = cards.filter(c => c.card_type === 'days' && c.card_duration === 1).length;
         const day7 = cards.filter(c => c.card_type === 'days' && c.card_duration === 7).length;
+        const permanent = cards.filter(c => c.card_type === 'permanent').length;
 
         document.getElementById('stats').innerHTML = `
             <div class="stat-box"><div class="num">${total}</div><div class="label">总卡密</div></div>
@@ -154,6 +156,7 @@ async function loadStats() {
             <div class="stat-box"><div class="num">${hours}</div><div class="label">2小时卡</div></div>
             <div class="stat-box"><div class="num">${day1}</div><div class="label">1天卡</div></div>
             <div class="stat-box"><div class="num">${day7}</div><div class="label">7天卡</div></div>
+            <div class="stat-box"><div class="num">${permanent}</div><div class="label">永久卡</div></div>
         `;
     } catch (e) {
         console.error(e);
@@ -168,7 +171,8 @@ async function generateCards() {
     let cardType, cardDuration;
     if (typeSel === 'hours') { cardType = 'hours'; cardDuration = 2; }
     else if (typeSel === 'days_1') { cardType = 'days'; cardDuration = 1; }
-    else { cardType = 'days'; cardDuration = 7; }
+    else if (typeSel === 'days_7') { cardType = 'days'; cardDuration = 7; }
+    else { cardType = 'permanent'; cardDuration = 0; }
 
     const newCards = [];
     for (let i = 0; i < count; i++) {
@@ -179,7 +183,7 @@ async function generateCards() {
         const { error } = await supabaseClient.from('cards').insert(newCards);
         if (error) throw error;
 
-        const typeName = cardType === 'hours' ? '2小时卡' : (cardDuration === 1 ? '1天卡' : '7天卡');
+        const typeName = cardType === 'hours' ? '2小时卡' : (cardType === 'permanent' ? '永久卡' : (cardDuration === 1 ? '1天卡' : '7天卡'));
         showMsg('genMsg', `成功生成${count}张${typeName}`, 'success');
 
         const text = newCards.map((c, i) => `${(i+1).toString().padStart(3,'0')}. ${c.card_key}`).join('\n');
@@ -201,7 +205,7 @@ async function loadCards() {
 
         let html = '';
         cards.forEach(c => {
-            const typeName = c.card_type === 'hours' ? `${c.card_duration}小时` : `${c.card_duration}天`;
+            const typeName = c.card_type === 'hours' ? c.card_duration + '小时' : (c.card_type === 'permanent' ? '永久' : c.card_duration + '天');
             const used = usedKeys.has(c.card_key);
             html += `<div class="card-item">
                 <span class="key">${c.card_key}</span>
