@@ -171,7 +171,7 @@ transform:scale(0);animation:ripple 0.6s ease-out;pointer-events:none;}
 /* ===== 地图模式 ===== */
 #mapMode{text-align:center;padding:30px 0;color:#8a7d5a;}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -611,7 +611,7 @@ const deviceId = getDeviceId();
 // ===== Supabase初始化 =====
 const SUPABASE_URL = 'https://xrfzqlwrkidsblxofevj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_9l8AW-w--GORou1AaAD95g_TOQrQ-0f';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ===== 粒子背景 =====
 const pCanvas = document.getElementById('particleCanvas');
