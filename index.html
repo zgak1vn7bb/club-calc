@@ -838,8 +838,10 @@ function startCountdown() {
                 totalMs = (data.hh || 0) * 3600000;
             } else if (data.t === 'days') {
                 totalMs = (data.d || 0) * 86400000;
+            } else if (data.t === 'permanent') {
+                totalMs = 9999 * 86400000;
             }
-            if (totalMs <= 0 || data.t === 'permanent') { document.getElementById('countdown').innerText = '永久'; return; }
+            if (totalMs <= 0) { document.getElementById('countdown').innerText = '永久'; return; }
             const remainMs = (data.at + totalMs) - Date.now();
             if (remainMs <= 0) {
                 document.getElementById('countdown').innerText = '已过期';

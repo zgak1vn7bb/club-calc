@@ -96,6 +96,16 @@ h1{text-align:center;color:#d4b058;margin:30px 0;font-size:24px;}
             </div>
         </div>
 
+        <div class="generate-box">
+            <h3>查询卡密</h3>
+            <div id="queryMsg" class="msg"></div>
+            <div class="form-row">
+                <input type="text" id="queryKey" placeholder="输入要查询的卡密" style="flex:2;" onkeydown="if(event.key==='Enter')queryCard()">
+                <button onclick="queryCard()">查询</button>
+            </div>
+            <div id="queryResult" style="display:none;background:rgba(20,19,13,0.5);border-radius:8px;padding:15px;margin-top:10px;font-size:13px;line-height:1.8;"></div>
+        </div>
+
         <div class="cards-list">
             <h3>卡密列表 <button onclick="loadCards()">刷新</button></h3>
             <div id="cardsList"></div>
@@ -260,6 +270,81 @@ async function renewCard() {
     }
 }
 
+async function queryCard() {
+    const key = document.getElementById('queryKey').value.trim().toUpperCase();
+    const resultBox = document.getElementById('queryResult');
+    if (!key) { showMsg('queryMsg', '请输入卡密', 'error'); return; }
+
+    try {
+        // 查卡密信息
+        const { data: card, error: cardError } = await supabaseClient
+            .from('cards')
+            .select('*')
+            .eq('card_key', key)
+            .single();
+
+        if (cardError || !card) {
+            resultBox.style.display = 'block';
+            resultBox.innerHTML = '<p style="color:#e74c3c;">❌ 该卡密不存在</p>';
+            return;
+        }
+
+        // 查绑定记录
+        const { data: binding } = await supabaseClient
+            .from('card_bindings')
+            .select('*')
+            .eq('card_key', key)
+            .single();
+
+        const typeName = card.card_type === 'hours' ? card.card_duration + '小时卡' :
+                          (card.card_type === 'permanent' ? '永久卡（9999天）' : card.card_duration + '天卡');
+
+        let html = '<p><strong>卡密：</strong>' + card.card_key + '</p>';
+        html += '<p><strong>类型：</strong>' + typeName + '</p>';
+        html += '<p><strong>创建时间：</strong>' + new Date(card.created_at).toLocaleString('zh-CN') + '</p>';
+
+        if (binding) {
+            const isExpired = new Date(binding.expires_at) < new Date();
+            const remainMs = new Date(binding.expires_at) - Date.now();
+            html += '<hr style="border-color:rgba(212,176,88,0.2);margin:10px 0;">';
+            html += '<p style="color:#2ecc71;"><strong>✅ 已使用</strong></p>';
+            html += '<p><strong>绑定设备：</strong>' + binding.device_id + '</p>';
+            html += '<p><strong>激活时间：</strong>' + new Date(binding.activated_at).toLocaleString('zh-CN') + '</p>';
+            html += '<p><strong>到期时间：</strong>' + new Date(binding.expires_at).toLocaleString('zh-CN') + '</p>';
+            if (isExpired) {
+                html += '<p style="color:#e74c3c;"><strong>状态：已过期</strong></p>';
+            } else {
+                const d = Math.floor(remainMs / 86400000);
+                const h = Math.floor((remainMs % 86400000) / 3600000);
+                const m = Math.floor((remainMs % 3600000) / 60000);
+                html += '<p style="color:#2ecc71;"><strong>剩余：</strong>' + d + '天' + h + '时' + m + '分</p>';
+            }
+        } else {
+            html += '<hr style="border-color:rgba(212,176,88,0.2);margin:10px 0;">';
+            html += '<p style="color:#f5a623;"><strong>⏳ 未使用</strong></p>';
+        }
+
+        resultBox.style.display = 'block';
+        resultBox.innerHTML = html;
+    } catch (e) {
+        showMsg('queryMsg', '查询失败: ' + e.message, 'error');
+    }
+}
+
+async function deleteCard(key) {
+    if (!confirm('确定要删除卡密 ' + key + ' 吗？删除后无法恢复！')) return;
+    try {
+        await supabaseClient.from('card_bindings').delete().eq('card_key', key);
+        await supabaseClient.from('cards').delete().eq('card_key', key);
+        // 立即从页面移除
+        const el = document.querySelector('[data-key="' + key + '"]');
+        if (el) el.remove();
+        loadStats();
+    } catch (e) {
+        alert('删除失败: ' + e.message);
+    }
+}
+
 async function loadCards() {
     try {
         const { data: cards } = await supabaseClient.from('cards').select('*').order('created_at', { ascending: false });
@@ -270,10 +355,11 @@ async function loadCards() {
         cards.forEach(c => {
             const typeName = c.card_type === 'hours' ? c.card_duration + '小时' : (c.card_type === 'permanent' ? '永久' : c.card_duration + '天');
             const used = usedKeys.has(c.card_key);
-            html += `<div class="card-item">
+            html += `<div class="card-item" data-key="${c.card_key}">
                 <span class="key">${c.card_key}</span>
                 <span class="type">${typeName}</span>
                 <span class="status ${used ? 'used' : 'unused'}">${used ? '已使用' : '未使用'}</span>
+                <button onclick="deleteCard('${c.card_key}')" style="background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;">删除</button>
             </div>`;
         });
         document.getElementById('cardsList').innerHTML = html || '<p style="text-align:center;color:#8a7d5a;">暂无卡密</p>';
