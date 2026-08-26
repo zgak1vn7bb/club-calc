@@ -839,7 +839,7 @@ function startCountdown() {
             } else if (data.t === 'days') {
                 totalMs = (data.d || 0) * 86400000;
             }
-            if (totalMs <= 0) { document.getElementById('countdown').innerText = '永久'; return; }
+            if (totalMs <= 0 || data.t === 'permanent') { document.getElementById('countdown').innerText = '永久'; return; }
             const remainMs = (data.at + totalMs) - Date.now();
             if (remainMs <= 0) {
                 document.getElementById('countdown').innerText = '已过期';
