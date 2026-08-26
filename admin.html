@@ -215,6 +215,17 @@ async function generateCards() {
         document.getElementById('newCardsText').value = text;
         document.getElementById('newCardsBox').style.display = 'block';
 
+        // 自动下载txt文件
+        const blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `卡密_${typeName}_${count}张_${new Date().toLocaleDateString('zh-CN').replace(/\//g,'-')}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
         loadStats();
         loadCards();
     } catch (e) {
