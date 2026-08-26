@@ -729,13 +729,18 @@ async function doActivate() {
     if (!key) { err.innerText = '请输入密码'; return; }
     btn.disabled = true; btn.innerText = '验证中...'; err.innerText = '';
 
-    // 前端先验证卡密是否存在
-    const card = CARD_KEYS[key];
-    if (!card) {
+    // 从Supabase查卡密是否存在
+    const { data: cardData, error: cardError } = await supabaseClient
+        .from('cards')
+        .select('*')
+        .eq('card_key', key)
+        .single();
+    if (cardError || !cardData) {
         err.innerText = '卡密无效或已过期';
         btn.disabled = false; btn.innerText = '激 活';
         return;
     }
+    const card = { type: cardData.card_type, hours: cardData.card_type === 'hours' ? cardData.card_duration : 0, days: cardData.card_type === 'days' ? cardData.card_duration : 0 };
 
     try {
         // 查Supabase看卡密是否已绑定
@@ -883,8 +888,13 @@ document.getElementById('authInput').addEventListener('keydown', function(e) { i
     if (!act) return;
     try {
         const data = JSON.parse(act);
-        const card = CARD_KEYS[data.h];
-        if (!card) {
+        // 从Supabase查卡密
+        const { data: cardData, error: cardError } = await supabaseClient
+            .from('cards')
+            .select('*')
+            .eq('card_key', data.h)
+            .single();
+        if (cardError || !cardData) {
             localStorage.removeItem('_cd_act');
             document.getElementById('authErr').innerText = '卡密无效，请重新激活';
             return;

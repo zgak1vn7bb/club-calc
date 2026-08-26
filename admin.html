@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>卡密管理后台</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@3"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d0c08;color:#f0e8cc;min-height:100vh;}
+.container{max-width:800px;margin:0 auto;padding:20px;}
+h1{text-align:center;color:#d4b058;margin:30px 0;font-size:24px;}
+.login-box{background:linear-gradient(145deg,rgba(39,36,24,0.95),rgba(20,18,12,0.98));border:1px solid rgba(212,176,88,0.25);border-radius:12px;padding:30px;max-width:400px;margin:100px auto;}
+.login-box h2{text-align:center;color:#d4b058;margin-bottom:20px;}
+.login-box input{width:100%;padding:12px;background:rgba(20,19,13,0.8);border:1px solid rgba(212,176,88,0.3);border-radius:8px;color:#f0e8cc;font-size:16px;margin-bottom:15px;}
+.login-box button{width:100%;padding:12px;background:linear-gradient(135deg,#d4b058,#b8943f);border:none;border-radius:8px;color:#1a1810;font-size:16px;font-weight:bold;cursor:pointer;}
+.panel{display:none;}
+.panel.active{display:block;}
+.generate-box{background:linear-gradient(145deg,rgba(39,36,24,0.95),rgba(20,18,12,0.98));border:1px solid rgba(212,176,88,0.25);border-radius:12px;padding:25px;margin-bottom:20px;}
+.generate-box h3{color:#d4b058;margin-bottom:15px;}
+.form-row{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;}
+.form-row select,.form-row input{flex:1;min-width:120px;padding:10px;background:rgba(20,19,13,0.8);border:1px solid rgba(212,176,88,0.3);border-radius:8px;color:#f0e8cc;font-size:14px;}
+.form-row button{padding:10px 20px;background:linear-gradient(135deg,#d4b058,#b8943f);border:none;border-radius:8px;color:#1a1810;font-weight:bold;cursor:pointer;white-space:nowrap;}
+.cards-list{background:linear-gradient(145deg,rgba(39,36,24,0.95),rgba(20,18,12,0.98));border:1px solid rgba(212,176,88,0.25);border-radius:12px;padding:20px;max-height:500px;overflow-y:auto;}
+.cards-list h3{color:#d4b058;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;}
+.cards-list h3 button{font-size:12px;padding:5px 10px;background:rgba(212,176,88,0.2);border:1px solid rgba(212,176,88,0.4);border-radius:5px;color:#d4b058;cursor:pointer;}
+.card-item{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(20,19,13,0.5);border-radius:6px;margin-bottom:5px;font-size:13px;font-family:monospace;}
+.card-item .key{color:#f0e8cc;}
+.card-item .type{color:#8a7d5a;font-size:11px;}
+.card-item .status{font-size:11px;padding:2px 8px;border-radius:4px;}
+.status.unused{background:rgba(46,204,113,0.2);color:#2ecc71;}
+.status.used{background:rgba(231,76,60,0.2);color:#e74c3c;}
+.stats{display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;}
+.stat-box{flex:1;min-width:100px;background:linear-gradient(145deg,rgba(39,36,24,0.95),rgba(20,18,12,0.98));border:1px solid rgba(212,176,88,0.25);border-radius:10px;padding:15px;text-align:center;}
+.stat-box .num{font-size:24px;font-weight:bold;color:#d4b058;}
+.stat-box .label{font-size:12px;color:#8a7d5a;margin-top:5px;}
+.logout{position:absolute;top:20px;right:20px;padding:8px 15px;background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);border-radius:6px;color:#e74c3c;cursor:pointer;font-size:13px;}
+.msg{text-align:center;padding:10px;border-radius:6px;margin-bottom:15px;display:none;}
+.msg.success{background:rgba(46,204,113,0.2);color:#2ecc71;display:block;}
+.msg.error{background:rgba(231,76,60,0.2);color:#e74c3c;display:block;}
+.new-cards{background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);border-radius:8px;padding:15px;margin-top:15px;display:none;}
+.new-cards h4{color:#2ecc71;margin-bottom:10px;}
+.new-cards textarea{width:100%;height:150px;background:rgba(0,0,0,0.3);border:1px solid rgba(46,204,113,0.3);border-radius:6px;color:#2ecc71;padding:10px;font-family:monospace;font-size:12px;resize:none;}
+</style>
+</head>
+<body>
+<div class="container">
+    <!-- 登录页 -->
+    <div id="loginPanel" class="panel active">
+        <div class="login-box">
+            <h2>卡密管理后台</h2>
+            <div id="loginMsg" class="msg"></div>
+            <input type="password" id="adminPwd" placeholder="请输入管理员密码" onkeydown="if(event.key==='Enter')doLogin()">
+            <button onclick="doLogin()">登 录</button>
+        </div>
+    </div>
+
+    <!-- 管理面板 -->
+    <div id="adminPanel" class="panel">
+        <button class="logout" onclick="doLogout()">退出</button>
+        <h1>卡密管理后台</h1>
+
+        <div class="stats" id="stats"></div>
+
+        <div class="generate-box">
+            <h3>生成新卡密</h3>
+            <div id="genMsg" class="msg"></div>
+            <div class="form-row">
+                <select id="cardType">
+                    <option value="hours">2小时卡</option>
+                    <option value="days_1">1天卡</option>
+                    <option value="days_7">7天卡</option>
+                </select>
+                <input type="number" id="cardCount" value="10" min="1" max="500" placeholder="生成数量">
+                <button onclick="generateCards()">生成卡密</button>
+            </div>
+            <div class="new-cards" id="newCardsBox">
+                <h4>新生成的卡密（复制使用）</h4>
+                <textarea id="newCardsText" readonly></textarea>
+            </div>
+        </div>
+
+        <div class="cards-list">
+            <h3>卡密列表 <button onclick="loadCards()">刷新</button></h3>
+            <div id="cardsList"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://xrfzqlwrkidsblxofevj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_9l8AW-w--GORou1AaAD95g_TOQrQ-0f';
+const ADMIN_PASSWORD = 'admin888'; // 管理员密码，你可以改
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+function genKey() {
+    let key = '';
+    for (let g = 0; g < 4; g++) {
+        for (let c = 0; c < 4; c++) key += CHARS[Math.floor(Math.random() * CHARS.length)];
+        if (g < 3) key += '-';
+    }
+    return key;
+}
+
+function showMsg(id, text, type) {
+    const el = document.getElementById(id);
+    el.innerText = text;
+    el.className = 'msg ' + type;
+    setTimeout(() => { el.className = 'msg'; }, 3000);
+}
+
+function doLogin() {
+    const pwd = document.getElementById('adminPwd').value;
+    if (pwd === ADMIN_PASSWORD) {
+        sessionStorage.setItem('admin_logged', '1');
+        document.getElementById('loginPanel').classList.remove('active');
+        document.getElementById('adminPanel').classList.add('active');
+        loadStats();
+        loadCards();
+    } else {
+        showMsg('loginMsg', '密码错误', 'error');
+    }
+}
+
+function doLogout() {
+    sessionStorage.removeItem('admin_logged');
+    location.reload();
+}
+
+// 检查登录状态
+if (sessionStorage.getItem('admin_logged') === '1') {
+    document.getElementById('loginPanel').classList.remove('active');
+    document.getElementById('adminPanel').classList.add('active');
+    loadStats();
+    loadCards();
+}
+
+async function loadStats() {
+    try {
+        const { data: cards } = await supabaseClient.from('cards').select('card_type,card_duration');
+        const { data: bindings } = await supabaseClient.from('card_bindings').select('card_key');
+        const usedKeys = new Set(bindings.map(b => b.card_key));
+
+        const total = cards.length;
+        const used = cards.filter(c => usedKeys.has(c.card_key)).length;
+        const hours = cards.filter(c => c.card_type === 'hours').length;
+        const day1 = cards.filter(c => c.card_type === 'days' && c.card_duration === 1).length;
+        const day7 = cards.filter(c => c.card_type === 'days' && c.card_duration === 7).length;
+
+        document.getElementById('stats').innerHTML = `
+            <div class="stat-box"><div class="num">${total}</div><div class="label">总卡密</div></div>
+            <div class="stat-box"><div class="num">${used}</div><div class="label">已使用</div></div>
+            <div class="stat-box"><div class="num">${hours}</div><div class="label">2小时卡</div></div>
+            <div class="stat-box"><div class="num">${day1}</div><div class="label">1天卡</div></div>
+            <div class="stat-box"><div class="num">${day7}</div><div class="label">7天卡</div></div>
+        `;
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function generateCards() {
+    const typeSel = document.getElementById('cardType').value;
+    const count = parseInt(document.getElementById('cardCount').value);
+    if (!count || count < 1) { showMsg('genMsg', '请输入有效数量', 'error'); return; }
+
+    let cardType, cardDuration;
+    if (typeSel === 'hours') { cardType = 'hours'; cardDuration = 2; }
+    else if (typeSel === 'days_1') { cardType = 'days'; cardDuration = 1; }
+    else { cardType = 'days'; cardDuration = 7; }
+
+    const newCards = [];
+    for (let i = 0; i < count; i++) {
+        newCards.push({ card_key: genKey(), card_type: cardType, card_duration: cardDuration });
+    }
+
+    try {
+        const { error } = await supabaseClient.from('cards').insert(newCards);
+        if (error) throw error;
+
+        const typeName = cardType === 'hours' ? '2小时卡' : (cardDuration === 1 ? '1天卡' : '7天卡');
+        showMsg('genMsg', `成功生成${count}张${typeName}`, 'success');
+
+        const text = newCards.map((c, i) => `${(i+1).toString().padStart(3,'0')}. ${c.card_key}`).join('\n');
+        document.getElementById('newCardsText').value = text;
+        document.getElementById('newCardsBox').style.display = 'block';
+
+        loadStats();
+        loadCards();
+    } catch (e) {
+        showMsg('genMsg', '生成失败: ' + e.message, 'error');
+    }
+}
+
+async function loadCards() {
+    try {
+        const { data: cards } = await supabaseClient.from('cards').select('*').order('created_at', { ascending: false });
+        const { data: bindings } = await supabaseClient.from('card_bindings').select('card_key');
+        const usedKeys = new Set(bindings.map(b => b.card_key));
+
+        let html = '';
+        cards.forEach(c => {
+            const typeName = c.card_type === 'hours' ? `${c.card_duration}小时` : `${c.card_duration}天`;
+            const used = usedKeys.has(c.card_key);
+            html += `<div class="card-item">
+                <span class="key">${c.card_key}</span>
+                <span class="type">${typeName}</span>
+                <span class="status ${used ? 'used' : 'unused'}">${used ? '已使用' : '未使用'}</span>
+            </div>`;
+        });
+        document.getElementById('cardsList').innerHTML = html || '<p style="text-align:center;color:#8a7d5a;">暂无卡密</p>';
+    } catch (e) {
+        document.getElementById('cardsList').innerHTML = '<p style="color:#e74c3c;">加载失败</p>';
+    }
+}
+</script>
+</body>
+</html>
