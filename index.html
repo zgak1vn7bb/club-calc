@@ -171,6 +171,7 @@ transform:scale(0);animation:ripple 0.6s ease-out;pointer-events:none;}
 /* ===== 地图模式 ===== */
 #mapMode{text-align:center;padding:30px 0;color:#8a7d5a;}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@3"></script>
 </head>
 <body>
 
@@ -607,6 +608,11 @@ function getDeviceId() {
 }
 const deviceId = getDeviceId();
 
+// ===== Supabase初始化 =====
+const SUPABASE_URL = 'https://xrfzqlwrkidsblxofevj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_9l8AW-w--GORou1AaAD95g_TOQrQ-0f';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // ===== 粒子背景 =====
 const pCanvas = document.getElementById('particleCanvas');
 const pCtx = pCanvas.getContext('2d');
@@ -716,14 +722,14 @@ function animateBurst() {
 }
 
 // ===== 卡密验证（纯前端）=====
-function doActivate() {
+async function doActivate() {
     const key = document.getElementById('authInput').value.trim().toUpperCase();
     const err = document.getElementById('authErr');
     const btn = document.getElementById('authBtn');
     if (!key) { err.innerText = '请输入密码'; return; }
     btn.disabled = true; btn.innerText = '验证中...'; err.innerText = '';
 
-    // 前端验证卡密
+    // 前端先验证卡密是否存在
     const card = CARD_KEYS[key];
     if (!card) {
         err.innerText = '卡密无效或已过期';
@@ -731,51 +737,76 @@ function doActivate() {
         return;
     }
 
-    // 检查设备绑定
-    const bindKey = '_cd_bind_' + key;
-    const bindData = localStorage.getItem(bindKey);
+    try {
+        // 查Supabase看卡密是否已绑定
+        const { data: existing, error } = await supabaseClient
+            .from('card_bindings')
+            .select('*')
+            .eq('card_key', key)
+            .single();
 
-    if (bindData) {
-        const bind = JSON.parse(bindData);
-        if (bind.dev !== deviceId) {
-            err.innerText = '该卡密已在其他设备激活，一卡仅限一机';
-            btn.disabled = false; btn.innerText = '激 活';
-            return;
+        if (error && error.code !== 'PGRST116') {
+            throw error;
         }
-        // 检查是否过期
-        if (card.type === 'days' && card.days > 0) {
-            const expireTime = bind.at + card.days * 86400000;
-            if (Date.now() > expireTime) {
+
+        if (existing) {
+            // 卡密已被绑定
+            if (existing.device_id !== deviceId) {
+                err.innerText = '该卡密已在其他设备激活，一卡仅限一机';
+                btn.disabled = false; btn.innerText = '激 活';
+                return;
+            }
+            // 检查是否过期（用服务器时间）
+            if (new Date(existing.expires_at) < new Date()) {
                 err.innerText = '卡密已过期';
                 btn.disabled = false; btn.innerText = '激 活';
                 return;
             }
+            // 同一设备，直接登录
+            localStorage.setItem('_cd_act', JSON.stringify({
+                h: key, dev: deviceId, at: new Date(existing.activated_at).getTime(),
+                t: existing.card_type, d: existing.card_type === 'days' ? existing.card_duration : 0,
+                hh: existing.card_type === 'hours' ? existing.card_duration : 0
+            }));
+            document.getElementById('authMask').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            showApp({ expireAt: existing.expires_at });
+        } else {
+            // 首次激活，插入绑定记录
+            const now = new Date();
+            let expiresAt;
+            if (card.type === 'hours') {
+                expiresAt = new Date(now.getTime() + card.hours * 3600000).toISOString();
+            } else {
+                expiresAt = new Date(now.getTime() + card.days * 86400000).toISOString();
+            }
+
+            const { error: insertError } = await supabaseClient
+                .from('card_bindings')
+                .insert({
+                    card_key: key,
+                    device_id: deviceId,
+                    activated_at: now.toISOString(),
+                    expires_at: expiresAt,
+                    card_type: card.type,
+                    card_duration: card.type === 'hours' ? card.hours : card.days
+                });
+
+            if (insertError) throw insertError;
+
+            localStorage.setItem('_cd_act', JSON.stringify({
+                h: key, dev: deviceId, at: now.getTime(),
+                t: card.type, d: card.days || 0, hh: card.hours || 0
+            }));
+            document.getElementById('authMask').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            showApp({ expireAt: expiresAt });
         }
-    } else {
-        // 首次激活，绑定设备
-        const now = Date.now();
-        localStorage.setItem(bindKey, JSON.stringify({ dev: deviceId, at: now }));
+    } catch (e) {
+        console.error('激活失败:', e);
+        err.innerText = '网络错误，请重试';
+        btn.disabled = false; btn.innerText = '激 活';
     }
-
-    // 验证成功
-    const bind = JSON.parse(localStorage.getItem(bindKey));
-    const actData = { h: key, dev: deviceId, at: bind.at, t: card.type, d: card.days || 0, hh: card.hours || 0 };
-    localStorage.setItem('_cd_act', JSON.stringify(actData));
-
-    let expireAt = null;
-    if (card.type === 'days' && card.days > 0) {
-        expireAt = new Date(bind.at + card.days * 86400000).toISOString();
-        localStorage.setItem('_cd_exp', expireAt);
-    } else if (card.type === 'hours' && card.hours > 0) {
-        expireAt = new Date(bind.at + card.hours * 3600000).toISOString();
-        localStorage.setItem('_cd_exp', expireAt);
-    } else {
-        localStorage.setItem('_cd_exp', 'perm');
-    }
-
-    document.getElementById('authMask').style.display = 'none';
-    document.getElementById('mainApp').style.display = 'block';
-    showApp({ expireAt });
 }
 
 function showApp(data) {
@@ -846,8 +877,8 @@ function logoutAuth() {
 
 document.getElementById('authInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') doActivate(); });
 
-// 自动验证（纯前端）
-(function autoVerify() {
+// 自动验证（Supabase后端）
+(async function autoVerify() {
     const act = localStorage.getItem('_cd_act');
     if (!act) return;
     try {
@@ -855,45 +886,48 @@ document.getElementById('authInput').addEventListener('keydown', function(e) { i
         const card = CARD_KEYS[data.h];
         if (!card) {
             localStorage.removeItem('_cd_act');
-            localStorage.removeItem('_cd_exp');
             document.getElementById('authErr').innerText = '卡密无效，请重新激活';
             return;
         }
-        // 检查设备
-        if (data.dev !== deviceId) {
+
+        // 从Supabase查绑定信息
+        const { data: binding, error } = await supabaseClient
+            .from('card_bindings')
+            .select('*')
+            .eq('card_key', data.h)
+            .single();
+
+        if (error || !binding) {
             localStorage.removeItem('_cd_act');
-            localStorage.removeItem('_cd_exp');
+            return;
+        }
+
+        // 检查设备
+        if (binding.device_id !== deviceId) {
+            localStorage.removeItem('_cd_act');
             document.getElementById('authErr').innerText = '设备不匹配，请重新激活';
             return;
         }
-        // 检查过期
-        if (data.t === 'days' && data.d > 0) {
-            const expireTime = data.at + data.d * 86400000;
-            if (Date.now() > expireTime) {
-                localStorage.removeItem('_cd_act');
-                localStorage.removeItem('_cd_exp');
-                return;
-            }
-            document.getElementById('authMask').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            showApp({ expireAt: new Date(expireTime).toISOString() });
-        } else if (data.t === 'hours' && data.hh > 0) {
-            const expireTime = data.at + data.hh * 3600000;
-            if (Date.now() > expireTime) {
-                localStorage.removeItem('_cd_act');
-                localStorage.removeItem('_cd_exp');
-                return;
-            }
-            document.getElementById('authMask').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            showApp({ expireAt: new Date(expireTime).toISOString() });
-        } else {
-            document.getElementById('authMask').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            showApp({ expireAt: null });
+
+        // 检查过期（服务器时间）
+        if (new Date(binding.expires_at) < new Date()) {
+            localStorage.removeItem('_cd_act');
+            return;
         }
+
+        // 更新本地缓存的激活时间
+        localStorage.setItem('_cd_act', JSON.stringify({
+            h: data.h, dev: deviceId, at: new Date(binding.activated_at).getTime(),
+            t: binding.card_type, d: binding.card_type === 'days' ? binding.card_duration : 0,
+            hh: binding.card_type === 'hours' ? binding.card_duration : 0
+        }));
+
+        document.getElementById('authMask').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        showApp({ expireAt: binding.expires_at });
     } catch (e) {
-        localStorage.removeItem('_cd_act');
+        console.error('自动验证失败:', e);
+        // 网络错误时不清除本地数据，让用户手动重试
     }
 })();
 
