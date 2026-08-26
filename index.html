@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>俱乐部大玩家 · 价值计算器</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Microsoft YaHei","SimHei",sans-serif;}
+body{background:radial-gradient(ellipse at top,#16181f 0%,#0a0c10 60%);min-height:100vh;padding:10px 8px;overflow-x:hidden;color:#f0e8cc;}
+
+/* ===== 粒子背景 ===== */
+#particleCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+/* ===== 激活爆发层 ===== */
+#burstCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1000;pointer-events:none;display:none;}
+
+/* ===== 登录页 ===== */
+#authMask{position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;
+background:linear-gradient(135deg,rgba(13,12,8,0.85) 0%,rgba(20,16,10,0.75) 50%,rgba(13,12,8,0.9) 100%);
+backdrop-filter:blur(3px);}
+.auth-box{width:100%;max-width:340px;position:relative;z-index:2;
+background:linear-gradient(145deg,rgba(39,36,24,0.95),rgba(20,18,12,0.98));
+border:1px solid rgba(212,176,88,0.3);border-radius:16px;padding:32px 24px;text-align:center;
+box-shadow:0 0 40px rgba(212,176,88,0.1),0 8px 32px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,221,144,0.1);
+animation:boxFloat 4s ease-in-out infinite;}
+@keyframes boxFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+.auth-box::before{content:'';position:absolute;top:-2px;left:-2px;right:-2px;bottom:-2px;border-radius:18px;
+background:linear-gradient(135deg,rgba(212,176,88,0.4),transparent 40%,transparent 60%,rgba(212,176,88,0.2));
+z-index:-1;animation:borderGlow 3s ease-in-out infinite;}
+@keyframes borderGlow{0%,100%{opacity:0.6;}50%{opacity:1;}}
+.auth-icon{font-size:48px;margin-bottom:14px;filter:drop-shadow(0 0 12px rgba(255,215,0,0.5));animation:iconPulse 2s ease-in-out infinite;}
+@keyframes iconPulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 12px rgba(255,215,0,0.5));}50%{transform:scale(1.08);filter:drop-shadow(0 0 20px rgba(255,215,0,0.8));}}
+.auth-title{
+background:linear-gradient(135deg,#ffdd90 0%,#d4b058 40%,#fff4d6 50%,#d4b058 60%,#b89242 100%);
+background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+font-size:22px;font-weight:bold;margin-bottom:8px;letter-spacing:3px;animation:titleShine 3s linear infinite;}
+@keyframes titleShine{to{background-position:200% center;}}
+.auth-sub{color:#8a7d5a;font-size:12px;margin-bottom:22px;letter-spacing:1px;}
+.auth-input{width:100%;background:rgba(20,19,13,0.8);border:1px solid rgba(99,80,36,0.6);color:#f0e8cc;
+padding:12px 14px;font-size:15px;border-radius:8px;outline:none;text-align:center;letter-spacing:3px;margin-bottom:14px;
+transition:all 0.3s ease;font-family:'Courier New',monospace;}
+.auth-input:focus{border-color:#d4b058;box-shadow:0 0 16px rgba(212,176,88,0.3),inset 0 0 8px rgba(212,176,88,0.1);background:rgba(20,19,13,0.95);}
+.auth-input::placeholder{color:#5a5240;letter-spacing:1px;}
+.auth-btn{width:100%;padding:12px;
+background:linear-gradient(180deg,#8b6f2e 0%,#6b5424 50%,#5c4920 100%);
+border:1px solid #b89242;color:#ffdd90;font-size:15px;border-radius:8px;cursor:pointer;
+letter-spacing:6px;font-weight:bold;transition:all 0.3s ease;position:relative;overflow:hidden;
+box-shadow:0 4px 16px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,221,144,0.2);}
+.auth-btn:hover:not(:disabled){background:linear-gradient(180deg,#9b7f3e 0%,#7b6434 50%,#6c5930 100%);box-shadow:0 6px 20px rgba(212,176,88,0.3);}
+.auth-btn:disabled{opacity:0.6;cursor:not-allowed;}
+.auth-err{color:#e74c3c;font-size:12px;margin-top:10px;min-height:16px;}
+.auth-qq{color:#6a6248;font-size:11px;margin-top:16px;}
+.auth-qq span{color:#d4b058;}
+
+/* ===== 成功遮罩 ===== */
+#successOverlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:998;display:none;
+align-items:center;justify-content:center;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);}
+.success-text{font-size:32px;font-weight:bold;color:#ffdd90;text-shadow:0 0 30px rgba(255,215,0,0.8);letter-spacing:4px;
+animation:successPop 0.5s ease-out;}
+@keyframes successPop{0%{transform:scale(0.5);opacity:0;}100%{transform:scale(1);opacity:1;}}
+
+/* ===== 主应用 ===== */
+.main-box{max-width:480px;margin:0 auto;position:relative;z-index:1;}
+.user-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;
+background:rgba(20,18,12,0.8);border:1px solid rgba(212,176,88,0.2);border-radius:8px;margin-bottom:10px;font-size:12px;}
+.user-bar span{color:#8a7d5a;}
+.user-bar .expire{color:#d4b058;}
+.logout-link{color:#e74c3c;cursor:pointer;}
+.top-title{text-align:center;font-size:20px;font-weight:bold;letter-spacing:2px;margin-bottom:4px;
+background:linear-gradient(135deg,#ffdd90,#d4b058);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.top-sub{text-align:center;color:#6a6248;font-size:11px;margin-bottom:10px;letter-spacing:1px;}
+.author-line{text-align:center;color:#5a5240;font-size:10px;margin-bottom:12px;}
+
+.notice-bar{display:flex;align-items:center;gap:8px;padding:10px 12px;
+background:rgba(212,176,88,0.08);border:1px solid rgba(212,176,88,0.2);border-radius:8px;margin-bottom:12px;font-size:11px;color:#a09070;line-height:1.5;}
+.notice-icon{font-size:14px;}
+
+/* ===== 标签页 ===== */
+.tab-wrap{display:flex;gap:4px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;}
+.tab-item{flex:1;min-width:60px;text-align:center;padding:8px 4px;font-size:12px;cursor:pointer;
+background:rgba(20,18,12,0.6);border:1px solid rgba(99,80,36,0.3);border-radius:6px;color:#8a7d5a;transition:all 0.2s;white-space:nowrap;}
+.tab-item.active{background:linear-gradient(180deg,#8b6f2e,#5c4920);border-color:#d4b058;color:#ffdd90;}
+
+/* ===== 角色卡 ===== */
+.role-card{background:linear-gradient(145deg,rgba(39,36,24,0.9),rgba(20,18,12,0.95));
+border:1px solid rgba(212,176,88,0.2);border-radius:12px;padding:14px;margin-bottom:12px;}
+.role-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.role-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#d4b058,#8b6f2e);
+display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;color:#1a160e;}
+.role-name{font-size:15px;font-weight:bold;color:#ffdd90;}
+.role-badge{display:inline-block;font-size:10px;padding:2px 6px;background:rgba(212,176,88,0.2);
+border:1px solid rgba(212,176,88,0.3);border-radius:4px;color:#d4b058;margin-left:6px;}
+.role-tip{font-size:11px;color:#a09070;line-height:1.6;}
+.role-tip .highlight{color:#d4b058;}
+
+/* ===== 模式切换 ===== */
+.mode-wrap{display:flex;gap:8px;margin-bottom:12px;}
+.mode-item{flex:1;text-align:center;padding:10px;font-size:13px;cursor:pointer;
+background:rgba(20,18,12,0.6);border:1px solid rgba(99,80,36,0.3);border-radius:8px;color:#8a7d5a;transition:all 0.2s;}
+.mode-item.active{background:linear-gradient(180deg,#8b6f2e,#5c4920);border-color:#d4b058;color:#ffdd90;}
+
+/* ===== 输入行 ===== */
+.item-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(99,80,36,0.15);}
+.dot-wrap{display:flex;align-items:center;gap:8px;min-width:120px;}
+.color-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.dot-green{background:#2ecc71;box-shadow:0 0 8px rgba(46,204,113,0.5);}
+.dot-blue{background:#3498db;box-shadow:0 0 8px rgba(52,152,219,0.5);}
+.dot-purple{background:#9b59b6;box-shadow:0 0 8px rgba(155,89,182,0.5);}
+.dot-orange{background:#e67e22;box-shadow:0 0 8px rgba(230,126,34,0.5);}
+.dot-red{background:#e74c3c;box-shadow:0 0 8px rgba(231,76,60,0.5);}
+.dot-car{background:#f1c40f;box-shadow:0 0 8px rgba(241,196,15,0.5);}
+.txt-label{font-size:13px;color:#c0b090;}
+.item-row input[type="number"]{flex:1;background:rgba(20,19,13,0.8);border:1px solid rgba(99,80,36,0.4);
+color:#f0e8cc;padding:8px 10px;border-radius:6px;font-size:14px;text-align:right;outline:none;transition:all 0.2s;}
+.item-row input[type="number"]:focus{border-color:#d4b058;box-shadow:0 0 8px rgba(212,176,88,0.2);}
+
+.divider{border:none;border-top:1px solid rgba(99,80,36,0.2);margin:10px 0;}
+
+/* ===== 车身价 ===== */
+.car-pool-wrap{margin-bottom:12px;}
+.car-pool-label{display:flex;align-items:center;gap:8px;font-size:13px;color:#c0b090;margin-bottom:8px;}
+.car-pool-btns{display:flex;gap:6px;}
+.car-pool-btn{flex:1;text-align:center;padding:8px 4px;font-size:11px;cursor:pointer;
+background:rgba(20,18,12,0.6);border:1px solid rgba(99,80,36,0.3);border-radius:6px;color:#8a7d5a;transition:all 0.2s;}
+.car-pool-btn.active{background:rgba(212,176,88,0.15);border-color:#d4b058;color:#ffdd90;}
+
+/* ===== 折扣 ===== */
+.discount-row{margin-bottom:14px;}
+.discount-label{display:flex;justify-content:space-between;font-size:13px;color:#c0b090;margin-bottom:6px;}
+.discount-val{color:#d4b058;font-weight:bold;}
+input[type="range"]{width:100%;height:6px;-webkit-appearance:none;background:rgba(99,80,36,0.3);
+border-radius:3px;outline:none;}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+background:linear-gradient(135deg,#ffdd90,#d4b058);cursor:pointer;box-shadow:0 0 10px rgba(212,176,88,0.5);}
+
+/* ===== 结果区 ===== */
+.result-card{background:linear-gradient(145deg,rgba(39,36,24,0.95),rgba(20,18,12,0.98));
+border:1px solid rgba(212,176,88,0.25);border-radius:12px;padding:16px;margin-bottom:12px;}
+.result-total{text-align:center;margin-bottom:14px;}
+.result-total .label{font-size:12px;color:#8a7d5a;margin-bottom:4px;}
+.result-total .value{font-size:28px;font-weight:bold;color:#ffdd90;text-shadow:0 0 20px rgba(255,215,0,0.3);}
+
+.result-bid{text-align:center;padding:12px;background:rgba(212,176,88,0.08);border-radius:8px;margin-bottom:12px;}
+.result-bid .label{font-size:12px;color:#8a7d5a;margin-bottom:4px;}
+.result-bid .value{font-size:24px;font-weight:bold;color:#2ecc71;text-shadow:0 0 15px rgba(46,204,113,0.3);}
+
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.result-item{text-align:center;padding:8px;background:rgba(20,19,13,0.5);border-radius:6px;}
+.result-item .label{font-size:11px;color:#8a7d5a;margin-bottom:2px;}
+.result-item .value{font-size:16px;font-weight:bold;color:#f0e8cc;}
+.result-item.profit .value{color:#2ecc71;}
+
+/* ===== 置信度 ===== */
+.confidence-wrap{margin-bottom:12px;}
+.confidence-label{display:flex;justify-content:space-between;font-size:12px;color:#8a7d5a;margin-bottom:6px;}
+.confidence-bar{height:8px;background:rgba(99,80,36,0.3);border-radius:4px;overflow:hidden;}
+.confidence-fill{height:100%;background:linear-gradient(90deg,#e74c3c,#f1c40f,#2ecc71);border-radius:4px;transition:width 0.3s;}
+
+/* ===== 重置按钮 ===== */
+.reset-btn{width:100%;padding:12px;
+background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;
+font-size:14px;border-radius:8px;cursor:pointer;transition:all 0.2s;letter-spacing:2px;}
+.reset-btn:hover{background:rgba(231,76,60,0.25);}
+
+/* ===== 波纹效果 ===== */
+.ripple-effect{position:absolute;border-radius:50%;background:rgba(255,221,144,0.4);
+transform:scale(0);animation:ripple 0.6s ease-out;pointer-events:none;}
+@keyframes ripple{to{transform:scale(4);opacity:0;}}
+
+/* ===== 地图模式 ===== */
+#mapMode{text-align:center;padding:30px 0;color:#8a7d5a;}
+</style>
+</head>
+<body>
+
+<canvas id="particleCanvas"></canvas>
+<canvas id="burstCanvas"></canvas>
+
+<div id="successOverlay"><div class="success-text">激活成功</div></div>
+
+<div id="authMask">
+    <div class="auth-box">
+        <div class="auth-icon">🎮</div>
+        <div class="auth-title">俱乐部大玩家</div>
+        <div class="auth-sub">请输入激活密码以使用</div>
+        <input type="text" class="auth-input" id="authInput" placeholder="请输入密码" maxlength="32">
+        <button class="auth-btn" id="authBtn" onclick="doActivate()">激 活</button>
+        <div class="auth-err" id="authErr"></div>
+        <div class="auth-qq">获取密码请联系 <span>QQ：3676023445</span></div>
+    </div>
+</div>
+
+<div class="main-box" id="mainApp" style="display:none;">
+    <div class="user-bar">
+        <span>已授权</span>
+        <span class="expire" id="expireInfo"></span>
+        <span class="logout-link" onclick="logoutAuth()">退出</span>
+    </div>
+    <div class="top-title">俱乐部大玩家 · 价值计算器</div>
+    <div class="top-sub">角色估价 / 地图切换 / 均价反查</div>
+    <div class="author-line">作者 QQ：3676023445　|　© 永久</div>
+
+    <div class="notice-bar">
+        <span class="notice-icon">⚠</span>
+        <span>巡回模式估价仅供参考，看到50万以上的货直接喊哈，全程不使用道具。</span>
+    </div>
+
+    <div class="tab-wrap">
+        <div class="tab-item" onclick="switchMap('xunhui')">巡回</div>
+        <div class="tab-item active" onclick="switchMap('yanjing')">鹰眼</div>
+        <div class="tab-item" onclick="switchMap('xiangjiang')">香江</div>
+        <div class="tab-item" onclick="switchMap('nicheng')">暗城</div>
+        <div class="tab-item" onclick="switchMap('dubai')">迪拜</div>
+    </div>
+
+    <div class="role-card">
+        <div class="role-header">
+            <div class="role-avatar">暗</div>
+            <div class="role-name">暗科技<span class="role-badge">加权精准</span></div>
+        </div>
+        <div class="role-tip">
+            推荐道具：<span class="highlight">红格情怀，宠物价值，四件放大镜，娃娃扫描仪，全放大镜</span><br>
+            红格过多建议用娃娃扫描仪确认是否有车身，有则填入车身价。
+        </div>
+    </div>
+
+    <div class="mode-wrap">
+        <div class="mode-item active" onclick="switchMode('classic')">经典估价</div>
+        <div class="mode-item" onclick="switchMode('map')">地图测算</div>
+    </div>
+
+    <div id="classicMode">
+        <div class="item-row"><div class="dot-wrap"><span class="color-dot dot-green"></span><span class="txt-label">绿色（格数）</span></div><input type="number" id="green" value="" placeholder="0" oninput="calc()"></div>
+        <div class="item-row"><div class="dot-wrap"><span class="color-dot dot-blue"></span><span class="txt-label">蓝色（格数）</span></div><input type="number" id="blue" value="" placeholder="0" oninput="calc()"></div>
+        <div class="item-row"><div class="dot-wrap"><span class="color-dot dot-purple"></span><span class="txt-label">紫色（格数）</span></div><input type="number" id="purple" value="" placeholder="0" oninput="calc()"></div>
+        <div class="item-row"><div class="dot-wrap"><span class="color-dot dot-orange"></span><span class="txt-label">橙色（格数）</span></div><input type="number" id="orange" value="" placeholder="0" oninput="calc()"></div>
+        <div class="item-row"><div class="dot-wrap"><span class="color-dot dot-red"></span><span class="txt-label">红色（格数）</span></div><input type="number" id="red" value="" placeholder="0" oninput="calc()"></div>
+
+        <hr class="divider">
+
+        <div class="car-pool-wrap">
+            <div class="car-pool-label"><span class="color-dot dot-car"></span>车身价</div>
+            <div class="car-pool-btns">
+                <div class="car-pool-btn active" onclick="selectCarPool(0,this)">无</div>
+                <div class="car-pool-btn" onclick="selectCarPool(90000,this)">+1 9万</div>
+                <div class="car-pool-btn" onclick="selectCarPool(150000,this)">+2 15万</div>
+                <div class="car-pool-btn" onclick="selectCarPool(300000,this)">+3 30万</div>
+            </div>
+        </div>
+
+        <div class="discount-row">
+            <div class="discount-label"><span>出价折扣系数</span><span class="discount-val" id="discountText">0.85</span></div>
+            <input type="range" id="discountRange" min="0.5" max="1" step="0.01" value="0.85" oninput="updateDiscount()">
+        </div>
+
+        <div class="result-card">
+            <div class="result-total">
+                <div class="label">总价值</div>
+                <div class="value" id="totalVal">0</div>
+            </div>
+            <div class="result-bid">
+                <div class="label">建议出价</div>
+                <div class="value" id="bidVal">0</div>
+            </div>
+            <div class="result-grid">
+                <div class="result-item"><div class="label">低出价</div><div class="value" id="lowBid">0</div></div>
+                <div class="result-item"><div class="label">中出价</div><div class="value" id="midBid">0</div></div>
+                <div class="result-item"><div class="label">高出价</div><div class="value" id="highBid">0</div></div>
+                <div class="result-item profit"><div class="label">预期利润</div><div class="value" id="expectProfit">0</div></div>
+            </div>
+            <div class="result-item" style="margin-bottom:12px;"><div class="label">预期成交价</div><div class="value" id="expectDeal">0</div></div>
+            <div class="confidence-wrap">
+                <div class="confidence-label"><span>置信度</span><span id="confText">90%</span></div>
+                <div class="confidence-bar"><div class="confidence-fill" id="confFill" style="width:90%;"></div></div>
+            </div>
+        </div>
+
+        <button class="reset-btn" onclick="resetAll()">重置数据</button>
+    </div>
+
+    <div id="mapMode" style="display:none;">
+        <div style="text-align:center;padding:30px 0;color:#8a7d5a;">地图测算模式开发中...</div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+//  卡密数据区
+// ============================================================
+
+// ===== 卡密配置（在这里添加/删除卡密）=====
+const CARD_KEYS = {
+    "TEST-PERM-0000-0001": { type: "perm", days: 0 },
+    "TEST-7DAY-0000-0002": { type: "days", days: 7 },
+    "TEST-30DAY-0000-0003": { type: "days", days: 30 }
+};
+
+// ===== 设备指纹 =====
+function getDeviceId() {
+    let id = localStorage.getItem('_cd_id');
+    if (id) return id;
+    const info = [navigator.userAgent, screen.width+'x'+screen.height, screen.colorDepth, Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.language].join('|');
+    let h = 0;
+    for (let i = 0; i < info.length; i++) { h = ((h<<5)-h)+info.charCodeAt(i); h |= 0; }
+    id = 'D' + Math.abs(h).toString(36).toUpperCase();
+    localStorage.setItem('_cd_id', id);
+    return id;
+}
+const deviceId = getDeviceId();
+
+// ===== 粒子背景 =====
+const pCanvas = document.getElementById('particleCanvas');
+const pCtx = pCanvas.getContext('2d');
+let particles = [];
+function resizeCanvas() { pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight; }
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+const particleCount = isMobile ? 20 : 60;
+const linkDistance = isMobile ? 0 : 120;
+for (let i = 0; i < particleCount; i++) {
+    particles.push({
+        x: Math.random() * pCanvas.width,
+        y: Math.random() * pCanvas.height,
+        r: Math.random() * 2 + 0.5,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        alpha: Math.random() * 0.5 + 0.2
+    });
+}
+function drawParticles() {
+    pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+    particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = pCanvas.width;
+        if (p.x > pCanvas.width) p.x = 0;
+        if (p.y < 0) p.y = pCanvas.height;
+        if (p.y > pCanvas.height) p.y = 0;
+        pCtx.beginPath();
+        pCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        pCtx.fillStyle = `rgba(212,176,88,${p.alpha})`;
+        pCtx.fill();
+        pCtx.shadowBlur = 8;
+        pCtx.shadowColor = 'rgba(212,176,88,0.5)';
+    });
+    if (linkDistance > 0) {
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < linkDistance) {
+                    pCtx.beginPath();
+                    pCtx.moveTo(particles[i].x, particles[i].y);
+                    pCtx.lineTo(particles[j].x, particles[j].y);
+                    pCtx.strokeStyle = `rgba(212,176,88,${0.15 * (1 - dist/linkDistance)})`;
+                    pCtx.lineWidth = 0.5;
+                    pCtx.stroke();
+                }
+            }
+        }
+    }
+    pCtx.shadowBlur = 0;
+    requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// ===== 激活爆发特效 =====
+const bCanvas = document.getElementById('burstCanvas');
+const bCtx = bCanvas.getContext('2d');
+let burstParticles = [];
+function resizeBurst() { bCanvas.width = window.innerWidth; bCanvas.height = window.innerHeight; }
+resizeBurst();
+window.addEventListener('resize', resizeBurst);
+
+function triggerBurst() {
+    bCanvas.style.display = 'block';
+    const cx = bCanvas.width / 2, cy = bCanvas.height / 2;
+    for (let i = 0; i < 120; i++) {
+        const angle = (Math.PI * 2 * i) / 120 + Math.random() * 0.3;
+        const speed = Math.random() * 8 + 3;
+        burstParticles.push({
+            x: cx, y: cy,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            r: Math.random() * 4 + 1,
+            life: 1,
+            decay: Math.random() * 0.015 + 0.008,
+            color: Math.random() > 0.5 ? '255,221,144' : '212,176,88'
+        });
+    }
+    animateBurst();
+}
+function animateBurst() {
+    bCtx.fillStyle = 'rgba(13,12,8,0.15)';
+    bCtx.fillRect(0, 0, bCanvas.width, bCanvas.height);
+    burstParticles = burstParticles.filter(p => p.life > 0);
+    burstParticles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        p.vy += 0.08;
+        p.vx *= 0.99;
+        p.life -= p.decay;
+        bCtx.beginPath();
+        bCtx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+        bCtx.fillStyle = `rgba(${p.color},${p.life})`;
+        bCtx.shadowBlur = 15;
+        bCtx.shadowColor = `rgba(${p.color},${p.life})`;
+        bCtx.fill();
+    });
+    bCtx.shadowBlur = 0;
+    if (burstParticles.length > 0) {
+        requestAnimationFrame(animateBurst);
+    } else {
+        bCtx.clearRect(0, 0, bCanvas.width, bCanvas.height);
+        bCanvas.style.display = 'none';
+    }
+}
+
+// ===== 卡密验证（纯前端）=====
+function doActivate() {
+    const key = document.getElementById('authInput').value.trim().toUpperCase();
+    const err = document.getElementById('authErr');
+    const btn = document.getElementById('authBtn');
+    if (!key) { err.innerText = '请输入密码'; return; }
+    btn.disabled = true; btn.innerText = '验证中...'; err.innerText = '';
+
+    // 前端验证卡密
+    const card = CARD_KEYS[key];
+    if (!card) {
+        err.innerText = '卡密无效或已过期';
+        btn.disabled = false; btn.innerText = '激 活';
+        return;
+    }
+
+    // 检查设备绑定
+    const bindKey = '_cd_bind_' + key;
+    const bindData = localStorage.getItem(bindKey);
+
+    if (bindData) {
+        const bind = JSON.parse(bindData);
+        if (bind.dev !== deviceId) {
+            err.innerText = '该卡密已在其他设备激活，一卡仅限一机';
+            btn.disabled = false; btn.innerText = '激 活';
+            return;
+        }
+        // 检查是否过期
+        if (card.type === 'days' && card.days > 0) {
+            const expireTime = bind.at + card.days * 86400000;
+            if (Date.now() > expireTime) {
+                err.innerText = '卡密已过期';
+                btn.disabled = false; btn.innerText = '激 活';
+                return;
+            }
+        }
+    } else {
+        // 首次激活，绑定设备
+        const now = Date.now();
+        localStorage.setItem(bindKey, JSON.stringify({ dev: deviceId, at: now }));
+    }
+
+    // 验证成功
+    const bind = JSON.parse(localStorage.getItem(bindKey));
+    const actData = { h: key, dev: deviceId, at: bind.at, t: card.type, d: card.days || 0 };
+    localStorage.setItem('_cd_act', JSON.stringify(actData));
+
+    let expireAt = null;
+    if (card.type === 'days' && card.days > 0) {
+        expireAt = new Date(bind.at + card.days * 86400000).toISOString();
+        localStorage.setItem('_cd_exp', expireAt);
+    } else {
+        localStorage.setItem('_cd_exp', 'perm');
+    }
+
+    triggerBurst();
+    document.getElementById('successOverlay').style.display = 'flex';
+
+    setTimeout(() => {
+        document.getElementById('successOverlay').style.display = 'none';
+        document.getElementById('authMask').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        showApp({ expireAt });
+    }, 1200);
+}
+
+function showApp(data) {
+    if (data.expireAt) {
+        const d = new Date(data.expireAt);
+        document.getElementById('expireInfo').innerText = '到期：' + d.toLocaleDateString('zh-CN');
+    } else {
+        document.getElementById('expireInfo').innerText = '永久授权';
+    }
+}
+
+function logoutAuth() {
+    localStorage.removeItem('_cd_act');
+    localStorage.removeItem('_cd_exp');
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('authMask').style.display = 'flex';
+    document.getElementById('authInput').value = '';
+    document.getElementById('authBtn').disabled = false;
+    document.getElementById('authBtn').innerText = '激 活';
+    document.getElementById('authErr').innerText = '';
+}
+
+document.getElementById('authInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') doActivate(); });
+
+// 自动验证（纯前端）
+(function autoVerify() {
+    const act = localStorage.getItem('_cd_act');
+    if (!act) return;
+    try {
+        const data = JSON.parse(act);
+        const card = CARD_KEYS[data.h];
+        if (!card) {
+            localStorage.removeItem('_cd_act');
+            localStorage.removeItem('_cd_exp');
+            document.getElementById('authErr').innerText = '卡密无效，请重新激活';
+            return;
+        }
+        // 检查设备
+        if (data.dev !== deviceId) {
+            localStorage.removeItem('_cd_act');
+            localStorage.removeItem('_cd_exp');
+            document.getElementById('authErr').innerText = '设备不匹配，请重新激活';
+            return;
+        }
+        // 检查过期
+        if (data.t === 'days' && data.d > 0) {
+            const expireTime = data.at + data.d * 86400000;
+            if (Date.now() > expireTime) {
+                localStorage.removeItem('_cd_act');
+                localStorage.removeItem('_cd_exp');
+                return;
+            }
+            document.getElementById('authMask').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            showApp({ expireAt: new Date(expireTime).toISOString() });
+        } else {
+            document.getElementById('authMask').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            showApp({ expireAt: null });
+        }
+    } catch (e) {
+        localStorage.removeItem('_cd_act');
+    }
+})();
+
+// ===== 按钮波纹效果 =====
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.auth-btn, .reset-btn, .tab-item, .mode-item');
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple-effect';
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
+    btn.style.position = 'relative';
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+});
+
+// ===== 数字滚动动画 =====
+function animateNumber(el, target, duration) {
+    duration = duration || 300;
+    const start = parseInt(el.innerText.replace(/,/g, '')) || 0;
+    const startTime = performance.now();
+    function update(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(start + (target - start) * ease);
+        el.innerText = current.toLocaleString();
+        if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+}
+
+// ===== 计算器逻辑 =====
+const mapConfig = {
+    xunhui:{name:"巡回",price:{green:230,blue:659,purple:2702,orange:11276,red:54739}},
+    yanjing:{name:"鹰眼",price:{green:230,blue:659,purple:2702,orange:11059,red:52774}},
+    xiangjiang:{name:"香江",price:{green:230,blue:659,purple:2702,orange:11161,red:53938}},
+    nicheng:{name:"暗城",price:{green:230,blue:659,purple:2702,orange:11362,red:53394}},
+    dubai:{name:"迪拜",price:{green:46,blue:132,purple:540,orange:2273,red:10479}}
+};
+let currentMap = "yanjing", currentMode = "classic";
+let carPoolValue = 0;
+
+function selectCarPool(val, el) {
+    carPoolValue = val;
+    document.querySelectorAll('.car-pool-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    calc();
+}
+
+function updateDiscount(){ document.getElementById('discountText').innerText = document.getElementById('discountRange').value; calc(); }
+
+function switchMap(mapKey){
+    currentMap = mapKey;
+    document.querySelectorAll(".tab-wrap .tab-item").forEach(t=>t.classList.remove("active"));
+    event.target.classList.add("active");
+    resetAll();
+}
+
+function switchMode(mode){
+    currentMode = mode;
+    document.querySelectorAll(".mode-item").forEach(t=>t.classList.remove("active"));
+    event.target.classList.add("active");
+    document.getElementById('classicMode').style.display = mode==='classic'?'block':'none';
+    document.getElementById('mapMode').style.display = mode==='map'?'block':'none';
+}
+
+function resetAll(){
+    ['green','blue','purple','orange','red'].forEach(id=>document.getElementById(id).value="");
+    carPoolValue=0;
+    document.querySelectorAll('.car-pool-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+    ['bidVal','totalVal','lowBid','midBid','highBid','expectDeal','expectProfit'].forEach(id=>document.getElementById(id).innerText="0");
+    document.getElementById('discountRange').value=0.85;
+    document.getElementById('discountText').innerText="0.85";
+    document.getElementById('confFill').style.width="90%";
+    document.getElementById('confText').innerText="90%";
+}
+
+function calc(){
+    const cfg = mapConfig[currentMap];
+    const g=Number(document.getElementById('green').value)||0,
+          b=Number(document.getElementById('blue').value)||0,
+          p=Number(document.getElementById('purple').value)||0,
+          o=Number(document.getElementById('orange').value)||0,
+          r=Number(document.getElementById('red').value)||0,
+          car=carPoolValue;
+    const discount=Number(document.getElementById('discountRange').value)||0.85;
+    const gridTotal = g*cfg.price.green + b*cfg.price.blue + p*cfg.price.purple + o*cfg.price.orange + r*cfg.price.red;
+    const total = gridTotal + car;
+    const bid = Math.round(total * discount);
+    document.getElementById('totalVal').innerText = total.toLocaleString();
+    animateNumber(document.getElementById('bidVal'), bid);
+    animateNumber(document.getElementById('lowBid'), Math.round(total*0.75));
+    animateNumber(document.getElementById('midBid'), bid);
+    animateNumber(document.getElementById('highBid'), Math.round(total*0.95));
+    const expectDeal = Math.round(total * 1.04);
+    const expectProfit = expectDeal - bid;
+    document.getElementById('expectDeal').innerText = expectDeal.toLocaleString();
+    document.getElementById('expectProfit').innerText = expectProfit.toLocaleString();
+    let conf = 70;
+    if(r>0) conf += Math.min(r*3, 15);
+    if(car>0) conf += 5;
+    if(g+b+p+o+r > 5) conf += 5;
+    conf = Math.min(conf, 98);
+    document.getElementById('confFill').style.width = conf+"%";
+    document.getElementById('confText').innerText = conf+"%";
+}
+</script>
+</body>
+</html>
