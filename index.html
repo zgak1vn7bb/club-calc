@@ -66,6 +66,7 @@ background:rgba(20,18,12,0.8);border:1px solid rgba(212,176,88,0.2);border-radiu
 .user-bar span{color:#8a7d5a;}
 .user-bar .expire{color:#d4b058;}
 .logout-link{color:#e74c3c;cursor:pointer;}
+.countdown{font-size:11px;}
 .top-title{text-align:center;font-size:20px;font-weight:bold;letter-spacing:2px;margin-bottom:4px;
 background:linear-gradient(135deg,#ffdd90,#d4b058);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .top-sub{text-align:center;color:#6a6248;font-size:11px;margin-bottom:10px;letter-spacing:1px;}
@@ -136,24 +137,24 @@ background:linear-gradient(135deg,#ffdd90,#d4b058);cursor:pointer;box-shadow:0 0
 /* ===== 结果区 ===== */
 .result-card{background:linear-gradient(145deg,rgba(39,36,24,0.95),rgba(20,18,12,0.98));
 border:1px solid rgba(212,176,88,0.25);border-radius:12px;padding:16px;margin-bottom:12px;}
-.result-total{text-align:center;margin-bottom:14px;}
-.result-total .label{font-size:12px;color:#8a7d5a;margin-bottom:4px;}
-.result-total .value{font-size:28px;font-weight:bold;color:#ffdd90;text-shadow:0 0 20px rgba(255,215,0,0.3);}
+.result-total{text-align:center;margin-bottom:5px;}
+.result-total .label{font-size:10px;color:#8a7d5a;margin-bottom:2px;}
+.result-total .value{font-size:16px;font-weight:bold;color:#ffdd90;text-shadow:0 0 10px rgba(255,215,0,0.3);}
 
-.result-bid{text-align:center;padding:12px;background:rgba(212,176,88,0.08);border-radius:8px;margin-bottom:12px;}
-.result-bid .label{font-size:12px;color:#8a7d5a;margin-bottom:4px;}
-.result-bid .value{font-size:24px;font-weight:bold;color:#2ecc71;text-shadow:0 0 15px rgba(46,204,113,0.3);}
+.result-bid{text-align:center;padding:5px;background:rgba(212,176,88,0.08);border-radius:5px;margin-bottom:6px;}
+.result-bid .label{font-size:10px;color:#8a7d5a;margin-bottom:1px;}
+.result-bid .value{font-size:15px;font-weight:bold;color:#2ecc71;text-shadow:0 0 8px rgba(46,204,113,0.3);}
 
-.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-.result-item{text-align:center;padding:8px;background:rgba(20,19,13,0.5);border-radius:6px;}
-.result-item .label{font-size:11px;color:#8a7d5a;margin-bottom:2px;}
-.result-item .value{font-size:16px;font-weight:bold;color:#f0e8cc;}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;}
+.result-item{text-align:center;padding:4px;background:rgba(20,19,13,0.5);border-radius:4px;}
+.result-item .label{font-size:9px;color:#8a7d5a;margin-bottom:1px;}
+.result-item .value{font-size:12px;font-weight:bold;color:#f0e8cc;}
 .result-item.profit .value{color:#2ecc71;}
 
 /* ===== 置信度 ===== */
-.confidence-wrap{margin-bottom:12px;}
-.confidence-label{display:flex;justify-content:space-between;font-size:12px;color:#8a7d5a;margin-bottom:6px;}
-.confidence-bar{height:8px;background:rgba(99,80,36,0.3);border-radius:4px;overflow:hidden;}
+.confidence-wrap{margin-bottom:6px;}
+.confidence-label{display:flex;justify-content:space-between;font-size:10px;color:#8a7d5a;margin-bottom:3px;}
+.confidence-bar{height:5px;background:rgba(99,80,36,0.3);border-radius:3px;overflow:hidden;}
 .confidence-fill{height:100%;background:linear-gradient(90deg,#e74c3c,#f1c40f,#2ecc71);border-radius:4px;transition:width 0.3s;}
 
 /* ===== 重置按钮 ===== */
@@ -194,6 +195,7 @@ transform:scale(0);animation:ripple 0.6s ease-out;pointer-events:none;}
     <div class="user-bar">
         <span>已授权</span>
         <span class="expire" id="expireInfo"></span>
+        <span id="countdown" style="color:#2ecc71;font-weight:bold;font-size:11px;"></span>
         <span class="logout-link" onclick="logoutAuth()">退出</span>
     </div>
     <div class="top-title">俱乐部大玩家 · 价值计算器</div>
@@ -207,7 +209,7 @@ transform:scale(0);animation:ripple 0.6s ease-out;pointer-events:none;}
 
     <div class="tab-wrap">
         <div class="tab-item" onclick="switchMap('xunhui')">巡回</div>
-        <div class="tab-item active" onclick="switchMap('yanjing')">鹰眼</div>
+        <div class="tab-item active" onclick="switchMap('yanjing')">燕京</div>
         <div class="tab-item" onclick="switchMap('xiangjiang')">香江</div>
         <div class="tab-item" onclick="switchMap('nicheng')">暗城</div>
         <div class="tab-item" onclick="switchMap('dubai')">迪拜</div>
@@ -289,13 +291,308 @@ transform:scale(0);animation:ripple 0.6s ease-out;pointer-events:none;}
 // ============================================================
 
 // ===== 卡密配置（在这里添加/删除卡密）=====
-const _enc = "woAnR1BbVzJISVBRMl9TOzwyXF1WWyc/woAneX51aic/J3Vqd3InMSdpZn54Jz81woIxJ0w+W1MyN1NbUzJWNz1YMjdbPDsnP8KAJ3l+dWonPyd1andyJzEnaWZ+eCc/NcKCMSc8RkhQMjhWOkkyXUhZUjJKO0ZLJz/CgCd5fnVqJz8ndWp3cicxJ2lmfngnPzXCgjEnX1A8SjJYXl1NMj1RXk8yOTlTSyc/woAneX51aic/J3Vqd3InMSdpZn54Jz81woIxJ11RXEkyR0ZSOzJaUE87MktQOEYnP8KAJ3l+dWonPyd1andyJzEnaWZ+eCc/NcKCMSdISVg3Ml07VlEyUFVcNzI+Rk1IJz/CgCd5fnVqJz8ndWp3cicxJ2lmfngnPzXCgjEnTztRXjJNUkY+MlhLRkYyTEdbXSc/woAneX51aic/J3Vqd3InMSdpZn54Jz81woIxJ1JJTEYyXFdXSzJXOFNRMj1NSlknP8KAJ3l+dWonPyd1andyJzEnaWZ+eCc/NcKCMSdTTzhYMltePlUyXk1XTDJPPUtSJz/CgCd5fnVqJz8ndWp3cicxJ2lmfngnPzXCgjEnO19QXDI3WVJXMl86T0gySV9aUCc/woAneX51aic/J3Vqd3InMSdpZn54Jz81woIxJ1laV1AyX1E4XzJaWVZNMj08SVgnP8KAJ3l+dWonPyd1andyJzEnaWZ+eCc/NcKCMSdTSUtNMjs9V1gyVT5XTzJJODpRJz/CgCd5fnVqJz8ndWp3cicxJ2lmfngnPzXCgjEnUVBHOjJMUEZdMltfN1YyWDo8Nyc/woAneX51aic/J3Vqd3InMSdpZn54Jz81woIxJ1k4XksySkddUjJGWV84Ml1ZTEknP8KAJ3l+dWonPyd1andyJzEnaWZ+eCc/NcKCMSdNOk1VMkZLO1YySTpTUjJSSUlMJz/CgCd5fnVqJz8ndWp3cicxJ2lmfngnPzXCgjEnSEc6UTJQSEc6MkhYUkkyXFxNXic/woAneX51aic/J3Vqd3InMSdpZn54Jz81woIxJzlZWVAyOUs7UjJPOV48Mj1LVlsnP8KAJ3l+dWonPyd1andyJzEnaWZ+eCc/NcKCMSdPU1pWMlpdPUkyR0xZWzI9VVNaJz/CgCd5fnVqJz8ndWp3cicxJ2lmfngnPzXCgjEnT1pVOzI5T19VMlM8XzoyTT5fVic/woAneX51aic/J3Vqd3InMSdpZn54Jz81woIxJ1FXTzgyU0c+OjJGPF5HMjlbSD4nP8KAJ3l+dWonPyd1andyJzEnaWZ+eCc/NcKCMSc8Rlc3Mjs8VlUyO1E+RjJaX0w4Jz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzg1woIxJ0o6PlUyWV5RPTJPXVlMMkhHX1onP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/ODXCgjEnPElLTzJVOl5bMl5MPV8yOE9TSCc/woAneX51aic/J2lmfngnMSdpZn54Jz84NcKCMSdcPkhPMkheWlcyR1lNNzJJWlNdJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzg1woIxJ1g6UTsySlM+WjJcT1lZMl9YPEcnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/ODXCgjEnOVM+WDJSOldNMlhHXEgyWFdGXic/woAneX51aic/J2lmfngnMSdpZn54Jz84NcKCMSdHWldIMjc6O0wyXklLRzJfO0pXJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzg1woIxJ19eU1wyXlhVUTJKVVtWMlBHWzonP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/ODXCgjEnPFs9TDJQWDlTMjpQRzkyVz5POCc/woAneX51aic/J2lmfngnMSdpZn54Jz84NcKCMSc6RzhYMlFIVjcyOE9XOjJRT0g+Jz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzg1woIxJzpMTVMyWFtRUTJMVlFPMlVNODwnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/ODXCgjEnSExSTzJcS11NMjlKTTgyUjtLXyc/woAneX51aic/J2lmfngnMSdpZn54Jz84NcKCMSdeSkpfMl5cT14yRlU5UTJLTFU+Jz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzg1woIxJ1I5UEcyOVdKOzJKPjtdMk84WFcnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/ODXCgjEnSjhLVjJdXl5NMlI8PjwyS1ZGXSc/woAneX51aic/J2lmfngnMSdpZn54Jz84NcKCMSc6UD07Mk1JRj0yW1BTOTJfXV9KJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzg1woIxJ1ZMV0cyPj1SWDI5O1BQMlA4UUsnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/ODXCgjEnPFhRSzJWWlo8MlFMVksyX1xbTSc/woAneX51aic/J2lmfngnMSdpZn54Jz84NcKCMSdXWDpIMldZOTsyS0k7XzJHSDtLJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzg1woIxJzhNVVgyODxWXzJIUEZHMlI6VTwnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/ODXCgjEnWlhZPTJYU0xGMl5bR1MyWDtRUCc/woAneX51aic/J2lmfngnMSdpZn54Jz84NcKCMSdHXVlRMj1XX1oyXEk6WDJPUlJJJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzg1woIxJ0tYUk8yOzs+XTJJSD5SMk1POVwnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/ODXCgjEnSldKUTJVXjs9MlxdXTsyWFJcPCc/woAneX51aic/J2lmfngnMSdpZn54Jz84NcKCMSc5WFpIMkhdWzgyS01KWjJQXklZJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzg1woIxJzk5XU8yTEZdXDJXTz1VMjo5UlYnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/ODXCgjEnUVhZVjI+PV9WMjxfWE8yW1U+OSc/woAneX51aic/J2lmfngnMSdpZn54Jz84NcKCMSddTUdXMl1JN1cyWlNYWzJSXDhNJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzg1woIxJ1pbPF0yWkk5NzJbUkg9Ml1aWj0nP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/ODXCgjEnRkdbXDI8R1o9MjpeUFEyVVY+TSc/woAneX51aic/J2lmfngnMSdpZn54Jz84NcKCMSdPT0hHMktQWkYySl1SSjJHWEtVJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzg1woIxJ147VlUyRlo4NzJGTU1PMkhaSVgnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/ODXCgjEnPVZNTTI3S1NGMldTSToyOEtPXSc/woAneX51aic/J2lmfngnMSdpZn54Jz84NcKCMSdJO15bMklJPD0yPVJRWDI+PDhTJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzg1woIxJ0lMT1kyOl1YWTJaWF1MMlY7VVwnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/ODXCgjEnVUpIOjJZWEdIMj5KW0wyUFhNVyc/woAneX51aic/J2lmfngnMSdpZn54Jz84NcKCMSdKVVpNMk1XN0syRjhXSjJNUjdQJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzg1woIxJ0hJSk8yRkg7XDJcWE9QMlZSWjcnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/ODXCgjEnWldfTTJbPVlTMlFNTDgyWVJWWyc/woAneX51aic/J2lmfngnMSdpZn54Jz84NcKCMSdaSUk8MktLOV4yX188XDJNXF1ZJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzg1woIxJzo4TTsyS1ldOTJVTElGMlNeTFsnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/PMKCMSdVS19GMlk8TzwyXzc8VTI+Vl9QJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzzCgjEnX1s9ODJZUF87MjhRUFcyX09RXSc/woAneX51aic/J2lmfngnMSdpZn54Jz88woIxJztJN0syR1JPSzI9PFJGMjhJSFgnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/PMKCMSdKOExNMl08Wl8yODxbXzJHXVE9Jz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzzCgjEnSFdPSTJHVVlZMkxSSFUyWVJXVic/woAneX51aic/J2lmfngnMSdpZn54Jz88woIxJ0ZfTUcyPTtLUDJePDdXMlU4SzgnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/PMKCMSc6Rz5fMltSOFIySFBKSDJePk1VJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzzCgjEnRlI4UzJeVVpYMjlWR1wyWVJJUSc/woAneX51aic/J2lmfngnMSdpZn54Jz88woIxJ1laU0oyXVNbWzJdSF1NMkhaTTwnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/PMKCMSdMWF1LMlo5R1oyTTs7VTJIUT04Jz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzzCgjEnVlZQVzJfXzg3MkhaT08yV09eOic/woAneX51aic/J2lmfngnMSdpZn54Jz88woIxJ1s9VlIyS1c7OzJbRzw8Mjk6Xj4nP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/PMKCMSdLS145MjhPXUwyU1JPWTI8WTxMJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzzCgjEnPlM7UjJaR0lJMkhHU1cyVzlfWSc/woAneX51aic/J2lmfngnMSdpZn54Jz88woIxJ15KPVcyV0hGSzJTR1FVMlxfPFUnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/PMKCMSdGXUpbMlFHPlUyV0hGPjJKN0dMJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzzCgjEnXElePDJQXDxQMkY4R0wyX1M6Wyc/woAneX51aic/J2lmfngnMSdpZn54Jz88woIxJ0ZdOFYyODtQSjI+TDhNMk9VWFonP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/PMKCMSdZRkhfMk1YOlUyXDlZUDJNPVNaJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzzCgjEnOV49SzJMRz03MllJUD4yXUhIUSc/woAneX51aic/J2lmfngnMSdpZn54Jz88woIxJ1c9S14yWTxXSjJLUldYMl1NXE8nP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/PMKCMSdNPTlbMlo7R1IyX1dbVzJcTFpQJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzzCgjEnSVVIUTJWTEs4Ml1cUDsyX147WCc/woAneX51aic/J2lmfngnMSdpZn54Jz88woIxJ1hJSl4yWkpQWTJRODs8Mj5dUVknP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/PMKCMSdaV1ZVMlc+XFkyVltYOzI+R145Jz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzzCgjEnUDxGTTJLUFdWMktZOTsyOEc9Xyc/woAneX51aic/J2lmfngnMSdpZn54Jz88woIxJ1M9WEYyR1BGSjJHUj05MlFeN1wnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/PMKCMSdJUzw+MlZZU0syV0pNNzI9Skw8Jz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzzCgjEnUVJYTDJYVTw3MkZJUToyO0lSPSc/woAneX51aic/J2lmfngnMSdpZn54Jz88woIxJz1TVkYyUVJJRjJeN1VeMk1LSlknP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/PMKCMSdGXE9JMj1SVTwyUFw3PjJJSzdZJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzzCgjEnU0xZSTJQOVpeMlNaO1UyO0hZRic/woAneX51aic/J2lmfngnMSdpZn54Jz88woIxJ09cVUkySlZPOzJVS0pRMjlIRz0nP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/PMKCMSdcST5SMls8UTsyO19PRjI8O1dTJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzzCgjEnO1w5WjJeUF5cMlJbS00yPlleSCc/woAneX51aic/J2lmfngnMSdpZn54Jz88woIxJ0lfU1cyVzhSPTJaO109Ml9ZPkonP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/PMKCMSdcVjhZMk1LPF4yWz5GSzJJSVVJJz/CgCd5fnVqJz8naWZ+eCcxJ2lmfngnPzzCgjEnPj5fTTJZWVdGMlU5T1EyWlVPXCc/woAneX51aic/J2lmfngnMSdpZn54Jz88woIxJ1xQR1MyPUpLWDJfT1c7Mk9ZU1AnP8KAJ3l+dWonPydpZn54JzEnaWZ+eCc/PMKCwoI=";
-let _dec = atob(_enc);
-let _res = "";
-for (let _i = 0; _i < _dec.length; _i++) {
-    _res += String.fromCharCode(_dec.charCodeAt(_i) - 5);
-}
-const CARD_KEYS = JSON.parse(_res);
+const CARD_KEYS = {
+    "A78W-TT3X-F8FN-5WGU": { type: "hours", hours: 2 },
+    "QVV4-FMCH-9C3S-5RWZ": { type: "hours", hours: 2 },
+    "TM5W-XTT9-YP7A-7VL4": { type: "hours", hours: 2 },
+    "HRG3-5NMA-Z2LJ-9T88": { type: "hours", hours: 2 },
+    "6FCS-47V3-B3KG-9ZR2": { type: "hours", hours: 2 },
+    "CKKF-WW3Y-J8RG-2CXM": { type: "hours", hours: 2 },
+    "GC6R-G25V-A5MP-MY43": { type: "hours", hours: 2 },
+    "TR6S-3RWZ-CCNF-N4PA": { type: "hours", hours: 2 },
+    "MBD3-G77K-DUH8-HWPJ": { type: "hours", hours: 2 },
+    "DRCM-5998-54L5-6CYJ": { type: "hours", hours: 2 },
+    "JKVL-K3TJ-CL3Z-NF3U": { type: "hours", hours: 2 },
+    "RBUN-WPM9-5VAA-2R4F": { type: "hours", hours: 2 },
+    "TEJB-G6C5-Z55J-MPEZ": { type: "hours", hours: 2 },
+    "654X-PBZT-9UXY-SU7L": { type: "hours", hours: 2 },
+    "SJ3Z-RZ4R-95P4-8RVN": { type: "hours", hours: 2 },
+    "TYEU-QWGH-FTTT-MYJQ": { type: "hours", hours: 2 },
+    "Q3ZY-97N8-7KGD-Y4AZ": { type: "hours", hours: 2 },
+    "T6UR-8YWP-4393-4VC2": { type: "hours", hours: 2 },
+    "WAP8-SKWB-R5QG-WK2J": { type: "hours", hours: 2 },
+    "XDXJ-BSDW-645T-E44X": { type: "hours", hours: 2 },
+    "BCXA-AEYL-TWJE-JSCZ": { type: "hours", hours: 2 },
+    "GQ5P-JMXF-NT6C-F6JL": { type: "hours", hours: 2 },
+    "Q3UC-XF46-CWT5-UL92": { type: "hours", hours: 2 },
+    "H93U-J7RS-PUJL-9EXD": { type: "hours", hours: 2 },
+    "YBQR-MS49-G48L-LQVL": { type: "hours", hours: 2 },
+    "B8F2-UAEG-QPU6-MYHX": { type: "hours", hours: 2 },
+    "C8HK-3VDM-P2XX-783T": { type: "hours", hours: 2 },
+    "T73A-6W5L-E99G-XJ82": { type: "hours", hours: 2 },
+    "RVYG-GHKV-WRQG-JX65": { type: "hours", hours: 2 },
+    "S8HZ-JWZS-9FMZ-TN9W": { type: "hours", hours: 2 },
+    "WVZ9-Y76P-JD6V-MBZX": { type: "hours", hours: 2 },
+    "JE5R-7J85-D6M3-8UU3": { type: "hours", hours: 2 },
+    "DE2M-FZT4-PP8J-QC9Y": { type: "hours", hours: 2 },
+    "DQA4-BU6J-L88C-XLMM": { type: "hours", hours: 2 },
+    "6RVX-X293-BZS8-W9QG": { type: "hours", hours: 2 },
+    "339Z-JDLZ-5BW9-8TBV": { type: "hours", hours: 2 },
+    "G4M4-5UQF-72FJ-EB7U": { type: "hours", hours: 2 },
+    "NPTC-XFZH-8CXW-LQYT": { type: "hours", hours: 2 },
+    "Y5R7-CRZQ-XWR3-MQXE": { type: "hours", hours: 2 },
+    "4646-FFC9-RGMX-S962": { type: "hours", hours: 2 },
+    "YTLE-LJMS-BBS9-VVBT": { type: "hours", hours: 2 },
+    "W7LV-X6EY-VLG5-GMVK": { type: "hours", hours: 2 },
+    "T8F3-22PZ-RA5H-2USF": { type: "hours", hours: 2 },
+    "GAW7-N7W9-QFE6-3MKV": { type: "hours", hours: 2 },
+    "WA2N-ZDJY-C62G-4KLG": { type: "hours", hours: 2 },
+    "DZUT-8UDH-7VAG-9A5L": { type: "hours", hours: 2 },
+    "RTBW-N5RG-JZJ8-MYLW": { type: "hours", hours: 2 },
+    "AAFG-HZNW-NEXA-QQMB": { type: "hours", hours: 2 },
+    "RCGQ-PTRQ-XVKL-DM9F": { type: "hours", hours: 2 },
+    "FRHW-YB6J-PQZX-E6LC": { type: "hours", hours: 2 },
+    "JLHX-Q9MY-N9QL-XNRB": { type: "hours", hours: 2 },
+    "VW45-DMZZ-9UAF-KV4B": { type: "hours", hours: 2 },
+    "PHRC-FBKC-X2QS-H7W5": { type: "hours", hours: 2 },
+    "CYK3-GVBV-JA47-DNAP": { type: "hours", hours: 2 },
+    "QDH2-B9ZK-UGJK-LN6Z": { type: "hours", hours: 2 },
+    "E2RL-5MTZ-GGZ3-QK4F": { type: "hours", hours: 2 },
+    "PRAD-3RRE-5KVW-59KW": { type: "hours", hours: 2 },
+    "HFS7-DM55-9ULY-MMD8": { type: "hours", hours: 2 },
+    "KLG9-S628-EC9T-EWUP": { type: "hours", hours: 2 },
+    "N5JJ-9B84-QX8M-9K3Y": { type: "hours", hours: 2 },
+    "STNH-DHAT-DZY6-J9C3": { type: "hours", hours: 2 },
+    "L83Q-CTZ7-NC3N-GX6R": { type: "hours", hours: 2 },
+    "H2Z6-N9HY-HFJM-2AF8": { type: "hours", hours: 2 },
+    "F5LE-SDE5-9XBF-LWQ6": { type: "hours", hours: 2 },
+    "9PGP-ECKF-85QT-BBTY": { type: "hours", hours: 2 },
+    "LCLD-QHJR-U3ZY-GFLD": { type: "hours", hours: 2 },
+    "P6KD-CP5K-FGNY-7WFW": { type: "hours", hours: 2 },
+    "USW6-D5KZ-TUZ2-2LXV": { type: "hours", hours: 2 },
+    "35LJ-8CUB-AUTV-W9AX": { type: "hours", hours: 2 },
+    "X6FU-CKS7-6CB8-RNTD": { type: "hours", hours: 2 },
+    "8PXN-FKQ7-MMHQ-TXB9": { type: "hours", hours: 2 },
+    "PR5D-MKFZ-Q3U3-XYYU": { type: "hours", hours: 2 },
+    "AFYD-ZB9J-VGX4-RHNN": { type: "hours", hours: 2 },
+    "LKKK-5TLD-4U4U-EBND": { type: "hours", hours: 2 },
+    "559L-35YD-9HDB-QNES": { type: "hours", hours: 2 },
+    "SX3R-5J86-MQAG-7FQS": { type: "hours", hours: 2 },
+    "SYBR-JLNP-P29C-7S85": { type: "hours", hours: 2 },
+    "RWLT-CWCF-M7PF-QSRZ": { type: "hours", hours: 2 },
+    "N4AA-5J8V-UFED-8F5Q": { type: "hours", hours: 2 },
+    "8SLY-BBZ2-Q4WK-PQSG": { type: "hours", hours: 2 },
+    "LS9J-S5GM-ZWWG-GC59": { type: "hours", hours: 2 },
+    "WUF4-BM5V-G79N-LUXB": { type: "hours", hours: 2 },
+    "ZJPU-S84Y-PERG-SPF4": { type: "hours", hours: 2 },
+    "Z3FV-CHFY-NLCM-YY6M": { type: "hours", hours: 2 },
+    "QXKF-7PTD-XJ5P-ZAR4": { type: "hours", hours: 2 },
+    "UPJX-9GJ4-H25M-A4SU": { type: "hours", hours: 2 },
+    "T7L5-4DXG-JMSQ-RR9E": { type: "hours", hours: 2 },
+    "UY69-XBRY-6UWR-2QT9": { type: "hours", hours: 2 },
+    "MTDT-3BGQ-U9UF-5KDH": { type: "hours", hours: 2 },
+    "2JSK-GWGY-JPK5-M3W8": { type: "hours", hours: 2 },
+    "KZDA-HCPG-LC3S-5FBE": { type: "hours", hours: 2 },
+    "LLZ5-SE6Y-S4W6-EZ27": { type: "hours", hours: 2 },
+    "CT6Z-HPNL-ZGY9-WDX5": { type: "hours", hours: 2 },
+    "ANNC-GJZH-KQRJ-ZXBC": { type: "hours", hours: 2 },
+    "J737-53W3-GDQY-ASVU": { type: "hours", hours: 2 },
+    "8WKM-9NJ7-4FLE-P6EH": { type: "hours", hours: 2 },
+    "XVBA-HSEG-JS9F-GFEK": { type: "hours", hours: 2 },
+    "23ZS-PYFZ-N9DE-U48P": { type: "hours", hours: 2 },
+    "ST46-SDSA-7KZT-CMF7": { type: "hours", hours: 2 },
+    "RNM4-P9VM-G2CL-8SYR": { type: "hours", hours: 2 },
+    "XP8J-4QTQ-9XHW-KWCQ": { type: "days", days: 1 },
+    "9B59-PG4D-J9VQ-P5L2": { type: "days", days: 1 },
+    "FPV2-7URP-R3XU-L9R4": { type: "days", days: 1 },
+    "JN2S-AXZU-TCYK-LR9T": { type: "days", days: 1 },
+    "9MRF-QV2A-7CAY-YR6W": { type: "days", days: 1 },
+    "DMYM-6LPD-GU2Z-T72B": { type: "days", days: 1 },
+    "GGKV-XGJW-EVFY-KADN": { type: "days", days: 1 },
+    "NCQC-5UPC-ZULN-DRT8": { type: "days", days: 1 },
+    "2HDY-92DG-R4B9-CLQW": { type: "days", days: 1 },
+    "KGJE-CGDR-RUDZ-G4MK": { type: "days", days: 1 },
+    "TP2Q-AMKR-X2JG-6YS2": { type: "days", days: 1 },
+    "RQJF-TBF2-LKHT-T4E5": { type: "days", days: 1 },
+    "TM3Z-E7QV-PXRE-VFUL": { type: "days", days: 1 },
+    "WBYY-96KB-P9NC-ASBN": { type: "days", days: 1 },
+    "ZA3X-S7YV-K2Q9-VZLA": { type: "days", days: 1 },
+    "PLUR-ARXJ-K6D7-7PV3": { type: "days", days: 1 },
+    "Y6VM-KULT-XKY4-AH7X": { type: "days", days: 1 },
+    "G93X-WWFX-C68G-WQGU": { type: "days", days: 1 },
+    "DWMK-BWN4-JLPX-Y7NF": { type: "days", days: 1 },
+    "VSL2-UMWT-N4CQ-RM55": { type: "days", days: 1 },
+    "8Z5W-4CJM-EDXU-RE28": { type: "days", days: 1 },
+    "ZHZ9-E32P-WBEG-RGSK": { type: "days", days: 1 },
+    "XJWJ-R2D2-ARM7-T65H": { type: "days", days: 1 },
+    "XV5H-SVSV-6848-EV3R": { type: "days", days: 1 },
+    "7SWW-C9LY-VFKJ-L85N": { type: "days", days: 1 },
+    "SWAM-EAT2-ZPPT-G2RN": { type: "days", days: 1 },
+    "US7T-EAZW-VHA2-K4DF": { type: "days", days: 1 },
+    "9FK7-LQFK-8J3S-2NQT": { type: "days", days: 1 },
+    "9VJP-PAJB-QUDJ-AFED": { type: "days", days: 1 },
+    "RFWQ-T764-4AER-U862": { type: "days", days: 1 },
+    "7PGL-2V8E-3EMS-VVV7": { type: "days", days: 1 },
+    "6S3T-Q629-TFAC-XGQH": { type: "days", days: 1 },
+    "FEXR-Z6NQ-N83S-2EPW": { type: "days", days: 1 },
+    "Y8A9-3NV7-GMDF-4X4N": { type: "days", days: 1 },
+    "BGQ8-AFCU-ZCTB-BJM8": { type: "days", days: 1 },
+    "8T9X-JJAK-5KRL-ZWV3": { type: "days", days: 1 },
+    "4875-ETZT-7LCW-98YM": { type: "days", days: 1 },
+    "UFCB-R2QG-755V-M45B": { type: "days", days: 1 },
+    "L7M2-H93K-WL3D-7RSG": { type: "days", days: 1 },
+    "LBQ3-JUC7-UFKN-3ZJU": { type: "days", days: 1 },
+    "CEJD-XLD2-XMKK-J26U": { type: "days", days: 1 },
+    "URGY-UW22-KHUR-DGER": { type: "days", days: 1 },
+    "ABDV-RE3P-ZUTX-6XHM": { type: "days", days: 1 },
+    "LBTD-NMPU-UQZY-39BC": { type: "days", days: 1 },
+    "J7V6-LST6-R26T-XAPM": { type: "days", days: 1 },
+    "WUYB-PJGF-WQJT-7E7L": { type: "days", days: 1 },
+    "FA4U-69DC-9636-W9WG": { type: "days", days: 1 },
+    "U2QH-WZH5-W9H2-GWA5": { type: "days", days: 1 },
+    "PAKD-LZUH-GWE4-QZK9": { type: "days", days: 1 },
+    "H7RH-9RZV-TEZ6-W6KE": { type: "days", days: 1 },
+    "3R9A-YN77-9PUR-8SZW": { type: "days", days: 1 },
+    "8L8A-5MJL-MAQ8-234Z": { type: "days", days: 1 },
+    "4KFA-FQME-KLL2-E6ZB": { type: "days", days: 1 },
+    "PNM9-4UU8-X8RH-6P5R": { type: "days", days: 1 },
+    "8UBR-CXLR-4UUK-CNK9": { type: "days", days: 1 },
+    "CRYW-4L9R-C7HD-RTXB": { type: "days", days: 1 },
+    "GN34-LVDB-B5D9-6TAD": { type: "days", days: 1 },
+    "VVTP-2MSQ-H8H9-ZLEG": { type: "days", days: 1 },
+    "N9S4-WMKY-VUAS-WDUF": { type: "days", days: 1 },
+    "32SH-FVJ9-Q7HP-U683": { type: "days", days: 1 },
+    "Z5JK-MUSB-QHPE-9CGK": { type: "days", days: 1 },
+    "RADX-ESEL-9X4S-C7FW": { type: "days", days: 1 },
+    "SUQD-6HKR-2GWM-RJPR": { type: "days", days: 1 },
+    "KFVB-9NCH-JB22-UNXK": { type: "days", days: 1 },
+    "SGHY-AQMK-UWKG-AS4L": { type: "days", days: 1 },
+    "ZMP7-6CDG-YXPK-6C7E": { type: "days", days: 1 },
+    "NNDK-37J6-G5LL-RR37": { type: "days", days: 1 },
+    "8ZTE-PCX8-F5TM-VNFX": { type: "days", days: 1 },
+    "XYW4-G9PT-Q26H-9TCS": { type: "days", days: 1 },
+    "GN25-MCQG-N56E-6DEA": { type: "days", days: 1 },
+    "WMYF-CV9H-R73H-S6MA": { type: "days", days: 1 },
+    "MVWP-ZMJW-PXT3-MGHF": { type: "days", days: 1 },
+    "33NG-226S-LMGJ-PEWX": { type: "days", days: 1 },
+    "MHJ2-FFMF-K7BG-GA2W": { type: "days", days: 1 },
+    "L9UD-54RU-286M-WAJJ": { type: "days", days: 1 },
+    "9EAY-5BMY-V96X-555W": { type: "days", days: 1 },
+    "HFJV-2YT8-ZHZJ-SYY7": { type: "days", days: 1 },
+    "4ELK-PLR2-CETE-HQXD": { type: "days", days: 1 },
+    "9HT9-2Y7M-R8BM-6YWG": { type: "days", days: 1 },
+    "C5EL-2NZN-5XW7-H8GZ": { type: "days", days: 1 },
+    "NVMX-XRB6-HYLV-MUF4": { type: "days", days: 1 },
+    "F9TV-NH5A-DZK4-9CP2": { type: "days", days: 1 },
+    "EXMB-5KFP-PXYY-KUGT": { type: "days", days: 1 },
+    "4H5J-244X-4D7K-MRPP": { type: "days", days: 1 },
+    "3KLZ-3XYW-MESH-Z98C": { type: "days", days: 1 },
+    "NJWY-9SLT-MNTJ-CH3Y": { type: "days", days: 1 },
+    "QEH4-EBFA-W35Y-RSGB": { type: "days", days: 1 },
+    "QYQD-EJZP-7QFZ-ZCSA": { type: "days", days: 1 },
+    "HV6N-UNJT-7ARY-PKCS": { type: "days", days: 1 },
+    "AER2-EH3K-FFBD-LKFK": { type: "days", days: 1 },
+    "4LSQ-N3WV-EUKR-3RMF": { type: "days", days: 1 },
+    "YX8P-JGF7-E392-9L5F": { type: "days", days: 1 },
+    "D38H-MEBR-C4MJ-HMX7": { type: "days", days: 1 },
+    "73R7-LBW4-WJT5-LAFB": { type: "days", days: 1 },
+    "6MR5-9PAN-67N8-P5N8": { type: "days", days: 1 },
+    "UV8J-2EJU-TRJS-9F59": { type: "days", days: 1 },
+    "FXR2-ASPZ-ZTPG-SGA7": { type: "days", days: 1 },
+    "Q8Z6-GNZA-ETXV-69TN": { type: "days", days: 1 },
+    "5RX9-PKPG-6QNS-924S": { type: "days", days: 1 },
+    "GPPN-X9BY-ELNJ-C4Q8": { type: "days", days: 1 },
+    "L8XA-LJRT-WYGL-QUF5": { type: "days", days: 7 },
+    "9R5P-BDCC-YVZG-CD3D": { type: "days", days: 7 },
+    "685A-QGTS-T2GW-8HS9": { type: "days", days: 7 },
+    "V8NK-KZLL-NT7T-RNFY": { type: "days", days: 7 },
+    "9U5X-NV5C-G9W3-5NZ8": { type: "days", days: 7 },
+    "KSGS-QB6V-4UW6-K2MU": { type: "days", days: 7 },
+    "FGBQ-Y5NN-LBT6-FU6G": { type: "days", days: 7 },
+    "ZNSB-NUMS-EA2V-7FA3": { type: "days", days: 7 },
+    "T2TB-NDFJ-6WEQ-EYJ8": { type: "days", days: 7 },
+    "RJ2K-XBAZ-FNSD-KXGM": { type: "days", days: 7 },
+    "GZEP-ZL6L-9DNN-9MQH": { type: "days", days: 7 },
+    "7ZFY-8AJU-KDHE-WDMG": { type: "days", days: 7 },
+    "JFBV-46PV-2TGZ-ZUEZ": { type: "days", days: 7 },
+    "6LPR-UL2R-EKEV-UG9L": { type: "days", days: 7 },
+    "WPBB-XNFK-9XFW-9FB9": { type: "days", days: 7 },
+    "Z4H2-6VTR-AMY2-TDQS": { type: "days", days: 7 },
+    "E4PD-UBHK-P7H5-U2PP": { type: "days", days: 7 },
+    "ANZ2-7H88-3LVP-FNJT": { type: "days", days: 7 },
+    "8HZZ-3X76-GY5L-A85F": { type: "days", days: 7 },
+    "C3XN-QUEW-8259-L4B2": { type: "days", days: 7 },
+    "DMCM-B8XG-YDH9-DFQW": { type: "days", days: 7 },
+    "QBMN-7ETJ-T2AN-2UPK": { type: "days", days: 7 },
+    "BS3X-NMU4-NCMU-EK75": { type: "days", days: 7 },
+    "A8KK-U5ZE-A453-6PNA": { type: "days", days: 7 },
+    "N3A6-VPDQ-5MYQ-CGSW": { type: "days", days: 7 },
+    "63W5-8ZTC-CEGR-N2TX": { type: "days", days: 7 },
+    "KW94-CNPW-EDUH-Y95H": { type: "days", days: 7 },
+    "6TFV-Z6LN-EUE4-ZB6S": { type: "days", days: 7 },
+    "K997-TLBQ-V5EU-CZNL": { type: "days", days: 7 },
+    "K8K7-LL98-4PKM-56AB": { type: "days", days: 7 },
+    "LPEZ-79V9-YKVB-9SEY": { type: "days", days: 7 },
+    "ECYV-9296-ZUA6-2Y4G": { type: "days", days: 7 },
+    "QH5W-K288-AQJB-7KE7": { type: "days", days: 7 },
+    "K9PR-WW69-9BG6-ACM7": { type: "days", days: 7 },
+    "TQT9-SZR2-GNYX-TJQJ": { type: "days", days: 7 },
+    "5SJV-V9YJ-UKX5-JYT8": { type: "days", days: 7 },
+    "QVTY-GJJA-6DKT-R3WC": { type: "days", days: 7 },
+    "R47X-WCXW-P4J8-3DMR": { type: "days", days: 7 },
+    "JJBC-CEHR-29BE-NWGB": { type: "days", days: 7 },
+    "9GZ3-YKCJ-WBPF-GLEH": { type: "days", days: 7 },
+    "6ZCS-MM2V-94Q8-Z2PX": { type: "days", days: 7 },
+    "WVGH-9CEL-T37F-M7VP": { type: "days", days: 7 },
+    "7WVL-7CN5-462X-VYEZ": { type: "days", days: 7 },
+    "MP8M-BWFH-TS2G-QVGP": { type: "days", days: 7 },
+    "R69D-2HCM-WJ2T-PYHM": { type: "days", days: 7 },
+    "CE4T-TFXU-N5CX-DZ4E": { type: "days", days: 7 },
+    "PTVY-PW5Y-DERX-C3PF": { type: "days", days: 7 },
+    "UZ29-UTUR-W8Y5-NSJA": { type: "days", days: 7 },
+    "9QZ3-FTYT-R2BV-PFQN": { type: "days", days: 7 },
+    "WDDL-FZ9T-5YCX-ELWP": { type: "days", days: 7 },
+    "X5G7-M92D-DM93-WQ4P": { type: "days", days: 7 },
+    "WG8N-HAXR-423E-QVHU": { type: "days", days: 7 },
+    "5UU3-FWBG-NEUJ-H328": { type: "days", days: 7 },
+    "G6WC-2S5B-KT29-QGGL": { type: "days", days: 7 },
+    "TVSY-NZQV-STJJ-823K": { type: "days", days: 7 },
+    "YAD7-WMJM-MC3L-MN95": { type: "days", days: 7 },
+    "9G9D-X65G-48XN-3UCZ": { type: "days", days: 7 },
+    "BQV8-752C-KCKD-TGTU": { type: "days", days: 7 },
+    "8B6E-KN8U-H8AC-ZMJR": { type: "days", days: 7 },
+    "3EV6-BAFD-S7LX-CKMP": { type: "days", days: 7 },
+    "3XJZ-RTQR-CN4J-S595": { type: "days", days: 7 },
+    "KWVU-ZM84-9QFT-VVGS": { type: "days", days: 7 },
+    "WSG5-NDUM-HXPE-QRVY": { type: "days", days: 7 },
+    "6MQP-F8GH-R4TG-X37D": { type: "days", days: 7 },
+    "LNS4-LQSR-FAVS-ZF8Y": { type: "days", days: 7 },
+    "ZVRR-U9AE-WXPP-NAQP": { type: "days", days: 7 },
+    "ZQAJ-5Q75-PXZ3-ZG8W": { type: "days", days: 7 },
+    "8KAU-GRTA-YHAS-VDPW": { type: "days", days: 7 },
+    "AFPD-RMHP-PFNN-ZSX7": { type: "days", days: 7 },
+    "JVDP-48F7-EWMH-RSPS": { type: "days", days: 7 },
+    "CTRV-BSF7-Q7HW-WN5B": { type: "days", days: 7 },
+    "7934-V5JV-Y579-VKCU": { type: "days", days: 7 },
+    "V7BG-65C4-46Z9-EMAH": { type: "days", days: 7 },
+    "UB9B-NK2A-ZXGU-2MB2": { type: "days", days: 7 },
+    "2NKV-8LPQ-UEHC-BDUR": { type: "days", days: 7 },
+    "3VS3-F59U-D8ZY-68X3": { type: "days", days: 7 },
+    "ZUR5-4RGR-R4PC-HZLQ": { type: "days", days: 7 },
+    "V3RZ-KT4S-8T2C-K4NJ": { type: "days", days: 7 },
+    "CPRJ-39MD-NMAX-35PJ": { type: "days", days: 7 },
+    "2JFR-FTSB-Q529-MK4E": { type: "days", days: 7 },
+    "BTES-WWHF-MMKM-ADFU": { type: "days", days: 7 },
+    "HPYM-CWLW-R8L6-F8WH": { type: "days", days: 7 },
+    "CR9A-K8LP-JJU8-PN8W": { type: "days", days: 7 },
+    "RG4A-LT8P-XGLR-DB9Q": { type: "days", days: 7 },
+    "BVW2-KSW2-J3JJ-YNLD": { type: "days", days: 7 },
+    "GS4Y-S889-YNMH-WEWC": { type: "days", days: 7 },
+    "X4D3-BWXW-S86Y-VD6H": { type: "days", days: 7 },
+    "MM9G-CZ34-DJTK-LD7L": { type: "days", days: 7 },
+    "2QC9-AWKX-NQDH-HRLP": { type: "days", days: 7 },
+    "KU77-9E42-QEZZ-9T6S": { type: "days", days: 7 },
+    "FTWH-6332-G4KB-LQU2": { type: "days", days: 7 },
+    "NSA8-3PL7-HEKJ-5B5P": { type: "days", days: 7 },
+    "2BHB-2XEG-UVJW-M5YF": { type: "days", days: 7 },
+    "V9Z3-EP2T-AWP7-XL5T": { type: "days", days: 7 },
+    "BVQH-WNKP-ZR9J-X243": { type: "days", days: 7 },
+    "DPJ5-TGYN-ZZR2-7PAZ": { type: "days", days: 7 },
+    "YKD9-Y7CU-H2FM-SJ97": { type: "days", days: 7 },
+    "W55X-QG8Z-LDKB-3H4L": { type: "days", days: 7 },
+    "WPM5-E86T-BBS9-N36W": { type: "days", days: 7 },
+    "VF2M-6Z35-MAX2-3YVE": { type: "days", days: 7 }
+};
 
 // ===== 设备指纹 =====
 function getDeviceId() {
@@ -378,7 +675,7 @@ window.addEventListener('resize', resizeBurst);
 function triggerBurst() {
     bCanvas.style.display = 'block';
     const cx = bCanvas.width / 2, cy = bCanvas.height / 2;
-    for (let i = 0; i < 120; i++) {
+    for (let i = 0; i < 40; i++) {
         const angle = (Math.PI * 2 * i) / 120 + Math.random() * 0.3;
         const speed = Math.random() * 8 + 3;
         burstParticles.push({
@@ -387,7 +684,7 @@ function triggerBurst() {
             vy: Math.sin(angle) * speed,
             r: Math.random() * 4 + 1,
             life: 1,
-            decay: Math.random() * 0.015 + 0.008,
+            decay: Math.random() * 0.03 + 0.02,
             color: Math.random() > 0.5 ? '255,221,144' : '212,176,88'
         });
     }
@@ -462,38 +759,81 @@ function doActivate() {
 
     // 验证成功
     const bind = JSON.parse(localStorage.getItem(bindKey));
-    const actData = { h: key, dev: deviceId, at: bind.at, t: card.type, d: card.days || 0 };
+    const actData = { h: key, dev: deviceId, at: bind.at, t: card.type, d: card.days || 0, hh: card.hours || 0 };
     localStorage.setItem('_cd_act', JSON.stringify(actData));
 
     let expireAt = null;
     if (card.type === 'days' && card.days > 0) {
         expireAt = new Date(bind.at + card.days * 86400000).toISOString();
         localStorage.setItem('_cd_exp', expireAt);
+    } else if (card.type === 'hours' && card.hours > 0) {
+        expireAt = new Date(bind.at + card.hours * 3600000).toISOString();
+        localStorage.setItem('_cd_exp', expireAt);
     } else {
         localStorage.setItem('_cd_exp', 'perm');
     }
 
-    triggerBurst();
-    document.getElementById('successOverlay').style.display = 'flex';
-
-    setTimeout(() => {
-        document.getElementById('successOverlay').style.display = 'none';
-        document.getElementById('authMask').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        showApp({ expireAt });
-    }, 1200);
+    document.getElementById('authMask').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    showApp({ expireAt });
 }
 
 function showApp(data) {
     if (data.expireAt) {
         const d = new Date(data.expireAt);
-        document.getElementById('expireInfo').innerText = '到期：' + d.toLocaleDateString('zh-CN');
+        document.getElementById('expireInfo').innerText = '到期：' + d.toLocaleString('zh-CN');
     } else {
         document.getElementById('expireInfo').innerText = '永久授权';
     }
+    startCountdown();
+}
+
+// ===== 倒计时 =====
+let countdownTimer = null;
+function startCountdown() {
+    if (countdownTimer) clearInterval(countdownTimer);
+    function update() {
+        const act = localStorage.getItem('_cd_act');
+        if (!act) { document.getElementById('countdown').innerText = ''; return; }
+        try {
+            const data = JSON.parse(act);
+            let totalMs = 0;
+            if (data.t === 'hours') {
+                totalMs = (data.hh || 0) * 3600000;
+            } else if (data.t === 'days') {
+                totalMs = (data.d || 0) * 86400000;
+            }
+            if (totalMs <= 0) { document.getElementById('countdown').innerText = '永久'; return; }
+            const remainMs = (data.at + totalMs) - Date.now();
+            if (remainMs <= 0) {
+                document.getElementById('countdown').innerText = '已过期';
+                document.getElementById('countdown').style.color = '#e74c3c';
+                logoutAuth();
+                return;
+            }
+            const d = Math.floor(remainMs / 86400000);
+            const h = Math.floor((remainMs % 86400000) / 3600000);
+            const m = Math.floor((remainMs % 3600000) / 60000);
+            const s = Math.floor((remainMs % 60000) / 1000);
+            let txt = '';
+            if (d > 0) txt += d + '天';
+            if (h > 0 || d > 0) txt += h + '时';
+            txt += m + '分' + s + '秒';
+            document.getElementById('countdown').innerText = '剩余' + txt;
+            document.getElementById('countdown').style.color = remainMs < 3600000 ? '#e74c3c' : '#2ecc71';
+        } catch(e) {
+            document.getElementById('countdown').innerText = '';
+        }
+    }
+    update();
+    countdownTimer = setInterval(update, 1000);
+}
+function stopCountdown() {
+    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
 }
 
 function logoutAuth() {
+    stopCountdown();
     localStorage.removeItem('_cd_act');
     localStorage.removeItem('_cd_exp');
     document.getElementById('mainApp').style.display = 'none';
@@ -529,6 +869,16 @@ document.getElementById('authInput').addEventListener('keydown', function(e) { i
         // 检查过期
         if (data.t === 'days' && data.d > 0) {
             const expireTime = data.at + data.d * 86400000;
+            if (Date.now() > expireTime) {
+                localStorage.removeItem('_cd_act');
+                localStorage.removeItem('_cd_exp');
+                return;
+            }
+            document.getElementById('authMask').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            showApp({ expireAt: new Date(expireTime).toISOString() });
+        } else if (data.t === 'hours' && data.hh > 0) {
+            const expireTime = data.at + data.hh * 3600000;
             if (Date.now() > expireTime) {
                 localStorage.removeItem('_cd_act');
                 localStorage.removeItem('_cd_exp');
@@ -581,7 +931,7 @@ function animateNumber(el, target, duration) {
 // ===== 计算器逻辑 =====
 const mapConfig = {
     xunhui:{name:"巡回",price:{green:230,blue:659,purple:2702,orange:11276,red:54739}},
-    yanjing:{name:"鹰眼",price:{green:230,blue:659,purple:2702,orange:11059,red:52774}},
+    yanjing:{name:"燕京",price:{green:230,blue:659,purple:2702,orange:11059,red:52774}},
     xiangjiang:{name:"香江",price:{green:230,blue:659,purple:2702,orange:11161,red:53938}},
     nicheng:{name:"暗城",price:{green:230,blue:659,purple:2702,orange:11362,red:53394}},
     dubai:{name:"迪拜",price:{green:46,blue:132,purple:540,orange:2273,red:10479}}
