@@ -24,7 +24,7 @@ body{background:#0a0a0a;display:flex;justify-content:center;align-items:center;m
 .loading{display:none;margin-top:15px;color:#d4b058;font-size:13px;}
 .version{position:fixed;bottom:10px;right:10px;font-size:10px;color:#333;z-index:2;}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onload="initSupabase()"></script>
 </head>
 <body>
 <div class="bg"></div>
@@ -45,16 +45,22 @@ var VERSION = '2.0.1';
 var SUPABASE_URL = 'https://xrfzqlwrkidsblxofevj.supabase.co';
 var SUPABASE_KEY = 'sb_publishable_9l8AW-w--GORou1AaAD95g_TOQrQ-0f';
 var supabaseClient = null;
+var supabaseReady = false;
 
-// 等supabase库加载完再初始化
 function initSupabase() {
-  if (window.supabase && window.supabase.createClient) {
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  } else {
-    setTimeout(initSupabase, 100);
+  try {
+    if (window.supabase && window.supabase.createClient) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      supabaseReady = true;
+    } else {
+      setTimeout(initSupabase, 200);
+    }
+  } catch(e) {
+    setTimeout(initSupabase, 200);
   }
 }
-initSupabase();
+// 如果CDN已经加载完（onload可能在脚本解析前触发）
+if (window.supabase) initSupabase();
 
 // 粒子背景
 const canvas = document.getElementById('pCanvas');
@@ -85,7 +91,7 @@ async function doAuth(){
   const err = document.getElementById('authErr');
   const btn = document.getElementById('authBtn');
   const loading = document.getElementById('loading');
-  if(!supabaseClient){err.innerText='系统加载中，请稍候再试';return;}
+  if(!supabaseReady || !supabaseClient){err.innerText='系统加载中，请稍候再试';return;}
   if(!key){err.innerText='请输入卡密';return;}
   btn.disabled=true;btn.innerText='验证中...';err.innerText='';loading.style.display='block';
   try{
