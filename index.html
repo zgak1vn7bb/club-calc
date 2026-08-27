@@ -107,11 +107,9 @@ async function doAuth(){
       btn.disabled=false;btn.innerText='激 活';loading.style.display='none';
       return;
     }
-    // 验证通过，写入计算器代码
+    // 验证通过，存储授权信息并跳转到计算器
     localStorage.setItem('_cd_act',JSON.stringify({h:key,dev:deviceId,at:Date.now(),exp:result.expires_at}));
-    document.open();
-    document.write(result.code);
-    document.close();
+    window.location.href = 'calculator.html';
   }catch(e){
     err.innerText='网络错误，请重试';
     btn.disabled=false;btn.innerText='激 活';loading.style.display='none';
