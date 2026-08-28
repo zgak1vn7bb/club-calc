@@ -59,7 +59,6 @@ function initSupabase() {
     setTimeout(initSupabase, 200);
   }
 }
-// 如果CDN已经加载完（onload可能在脚本解析前触发）
 if (window.supabase) initSupabase();
 
 // 粒子背景
@@ -73,13 +72,14 @@ function drawP(){ctx.clearRect(0,0,canvas.width,canvas.height);particles.forEach
 drawP();
 window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
 
-// 设备ID
+// 设备ID（改进版：去掉易变的屏幕分辨率，加随机UUID，只要不清缓存就不变）
 function getDeviceId(){
   let id = localStorage.getItem('_cd_id');
   if(id) return id;
-  const info = [navigator.userAgent,screen.width+'x'+screen.height,screen.colorDepth,Intl.DateTimeFormat().resolvedOptions().timeZone,navigator.language].join('|');
-  let h=0;for(let i=0;i<info.length;i++){h=((h<<5)-h)+info.charCodeAt(i);h|=0;}
-  id='D'+Math.abs(h).toString(36).toUpperCase();
+  const stableInfo = [navigator.userAgent, Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.language].join('|');
+  let h=0;for(let i=0;i<stableInfo.length;i++){h=((h<<5)-h)+stableInfo.charCodeAt(i);h|=0;}
+  const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+  id = 'D' + Math.abs(h).toString(36).toUpperCase() + randomPart;
   localStorage.setItem('_cd_id',id);
   return id;
 }
@@ -113,9 +113,7 @@ async function doAuth(){
       btn.disabled=false;btn.innerText='激 活';loading.style.display='none';
       return;
     }
-    // 验证通过，用iframe加载计算器代码（代码只在内存中，不上传GitHub）
     localStorage.setItem('_cd_act',JSON.stringify({h:key,dev:deviceId,at:Date.now(),exp:result.expires_at}));
-    // 创建全屏iframe
     const iframe = document.createElement('iframe');
     iframe.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;border:none;z-index:9999;';
     iframe.srcdoc = result.code;
@@ -126,12 +124,6 @@ async function doAuth(){
     btn.disabled=false;btn.innerText='激 活';loading.style.display='none';
   }
 }
-
-// 防破解（调试时先注释掉）
-// document.addEventListener('contextmenu',e=>e.preventDefault());
-// document.addEventListener('keydown',e=>{
-//   if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'))||(e.ctrlKey&&(e.key==='u'||e.key==='U'))){e.preventDefault();}
-// });
 </script>
 </body>
 </html>
