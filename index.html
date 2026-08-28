@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>恶魔 · 俱乐部大玩家估值系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Microsoft YaHei',sans-serif;}
+body{min-height:100vh;display:flex;justify-content:center;align-items:center;
+background:radial-gradient(ellipse at center,#1a0000 0%,#0a0a0a 70%);
+overflow:hidden;color:#fff;position:relative;}
+.bg{position:fixed;top:0;left:0;width:100%;height:100%;
+background-image:url('https://images.unsplash.com/photo-1518709268805-4e9042af2176?q=80&w=2000&auto=format&fit=crop');
+background-size:cover;background-position:center;filter:brightness(0.3) blur(2px);z-index:0;}
+.particles{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;}
+.container{position:relative;z-index:2;text-align:center;padding:40px 20px;}
+.logo{font-size:72px;margin-bottom:10px;filter:drop-shadow(0 0 20px rgba(212,176,88,0.5));}
+.title{font-size:42px;font-weight:bold;letter-spacing:4px;margin-bottom:8px;
+background:linear-gradient(135deg,#ffdd90,#d4b058,#fff4d6,#d4b058);
+background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+background-clip:text;animation:shine 3s linear infinite;}
+@keyframes shine{to{background-position:200% center;}}
+.subtitle{font-size:16px;color:#8a7d5a;margin-bottom:40px;letter-spacing:2px;}
+.buttons{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:30px;}
+.btn{padding:16px 40px;font-size:18px;font-weight:bold;border:none;border-radius:12px;
+cursor:pointer;transition:all 0.3s;letter-spacing:3px;text-decoration:none;display:inline-block;}
+.btn-use{background:linear-gradient(135deg,#d4b058,#b8943f);color:#1a1810;
+box-shadow:0 5px 25px rgba(212,176,88,0.4);}
+.btn-use:hover{transform:translateY(-3px);box-shadow:0 8px 35px rgba(212,176,88,0.6);}
+.btn-buy{background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);
+border:1px solid rgba(212,176,88,0.4);color:#d4b058;}
+.btn-buy:hover{background:rgba(212,176,88,0.2);transform:translateY(-3px);}
+.features{display:flex;gap:30px;justify-content:center;flex-wrap:wrap;margin-bottom:30px;}
+.feature{background:rgba(0,0,0,0.4);backdrop-filter:blur(10px);border:1px solid rgba(212,176,88,0.2);
+border-radius:12px;padding:20px 25px;text-align:center;min-width:140px;}
+.feature-icon{font-size:28px;margin-bottom:8px;}
+.feature-text{font-size:13px;color:#a09070;}
+.contact{font-size:14px;color:#666;}
+.contact span{color:#d4b058;}
+.tip{margin-top:20px;font-size:12px;color:#555;}
+@media(max-width:600px){
+  .title{font-size:28px;}
+  .logo{font-size:48px;}
+  .btn{padding:14px 28px;font-size:16px;}
+  .features{gap:10px;}
+  .feature{min-width:100px;padding:15px;}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<canvas class="particles" id="pCanvas"></canvas>
+<div class="container">
+  <div class="logo">😈</div>
+  <h1 class="title">恶 魔</h1>
+  <p class="subtitle">俱乐部大玩家 · 精准估值系统</p>
+  
+  <div class="features">
+    <div class="feature"><div class="feature-icon">🎯</div><div class="feature-text">四英雄估值</div></div>
+    <div class="feature"><div class="feature-icon">🗺️</div><div class="feature-text">五地图切换</div></div>
+    <div class="feature"><div class="feature-icon">🔒</div><div class="feature-text">一机一绑</div></div>
+  </div>
+  
+  <div class="buttons">
+    <a href="calc.html" class="btn btn-use">立即使用</a>
+    <a href="https://shop.368fk.cn/shop/FUCWGU1F" target="_blank" class="btn btn-buy">购买卡密</a>
+  </div>
+  
+  <div class="contact">客服QQ：<span>3676023445</span></div>
+  <div class="tip">AI本产品为私人版本，如被破解将追究责任</div>
+</div>
+
+<script>
+const canvas = document.getElementById('pCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+const particles = [];
+for(let i=0;i<50;i++){
+  particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,
+  r:Math.random()*2+0.5,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,
+  a:Math.random()*0.5+0.2});
+}
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0)p.x=canvas.width;if(p.x>canvas.width)p.x=0;
+    if(p.y<0)p.y=canvas.height;if(p.y>canvas.height)p.y=0;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle='rgba(212,176,88,'+p.a+')';ctx.fill();
+  });
+  requestAnimationFrame(draw);
+}
+draw();
+window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
+</script>
+</body>
+</html>
