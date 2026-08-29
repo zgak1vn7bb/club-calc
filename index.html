@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>恶魔 · 俱乐部大玩家估值系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0a0a0a;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:'Segoe UI',sans-serif;}
+.loading-box{text-align:center;color:#d4b058;}
+.loading-icon{font-size:48px;margin-bottom:15px;animation:spin 2s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-size:16px;letter-spacing:2px;}
+#contentFrame{position:fixed;top:0;left:0;width:100%;height:100%;border:none;display:none;}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="loading-box" id="loadingBox">
+  <div class="loading-icon">😈</div>
+  <div class="loading-text">系统加载中...</div>
+</div>
+<iframe id="contentFrame"></iframe>
+<script>
+var SUPABASE_URL = 'https://xrfzqlwrkidsblxofevj.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_9l8AW-w--GORou1AaAD95g_TOQrQ-0f';
+var supabaseClient = null;
+
+function initSupabase() {
+  try {
+    if (window.supabase && window.supabase.createClient) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      loadPage();
+    } else {
+      setTimeout(initSupabase, 200);
+    }
+  } catch(e) {
+    setTimeout(initSupabase, 200);
+  }
+}
+
+function getPageParam() {
+  var params = new URLSearchParams(window.location.search);
+  return params.get('page') || 'index';
+}
+
+async function loadPage() {
+  var page = getPageParam();
+  var funcName = page === 'calc' ? 'get_calc' : 'get_index';
+  try {
+    var { data, error } = await supabaseClient.rpc(funcName);
+    if (error) throw error;
+    var result = data[0];
+    if (!result.success) {
+      document.getElementById('loadingBox').innerHTML = '<div style="color:#e74c3c;">加载失败</div>';
+      return;
+    }
+    var iframe = document.getElementById('contentFrame');
+    iframe.srcdoc = result.code;
+    iframe.style.display = 'block';
+    document.getElementById('loadingBox').style.display = 'none';
+  } catch(e) {
+    console.error('加载失败:', e);
+    document.getElementById('loadingBox').innerHTML = '<div style="color:#e74c3c;">网络错误，请刷新重试</div>';
+  }
+}
+
+if (window.supabase) initSupabase();
+else window.addEventListener('load', initSupabase);
+</script>
+</body>
+</html>
