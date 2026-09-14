@@ -45,6 +45,85 @@ border-radius:12px;padding:20px 25px;text-align:center;min-width:140px;}
   .features{gap:10px;}
   .feature{min-width:100px;padding:15px;}
 }
+/* ===== 购买卡密弹窗 ===== */
+.pay-mask{position:fixed;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(4px);
+z-index:99;display:none;justify-content:center;align-items:center;padding:20px;}
+.pay-mask.show{display:flex;}
+.pay-modal{background:linear-gradient(160deg,#1c1408,#0e0e0e);border:1px solid rgba(212,176,88,0.5);
+border-radius:18px;padding:26px 24px 22px;max-width:360px;width:100%;text-align:center;position:relative;
+box-shadow:0 12px 50px rgba(0,0,0,0.7),0 0 40px rgba(212,176,88,0.15);animation:pop .25s ease;}
+@keyframes pop{from{transform:scale(.92);opacity:0;}to{transform:scale(1);opacity:1;}}
+.pay-close{position:absolute;top:8px;right:14px;font-size:26px;color:#8a7d5a;cursor:pointer;line-height:1;
+background:none;border:none;padding:0;}
+.pay-close:hover{color:#d4b058;}
+.pay-title{font-size:20px;font-weight:bold;color:#f0d48a;letter-spacing:2px;margin-bottom:6px;}
+.pay-sub{font-size:13px;color:#a09070;margin-bottom:18px;line-height:1.5;}
+/* 步骤小标题 */
+.choose-label{font-size:12px;color:#a09070;letter-spacing:1px;text-align:left;margin:2px 2px 8px;}
+/* 可点选选项（卡种 / 支付方式通用） */
+.opt-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.opt{display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;border-radius:12px;
+font-size:16px;font-weight:bold;letter-spacing:1px;cursor:pointer;border:1px solid rgba(212,176,88,0.3);
+transition:all .2s;text-align:left;background:rgba(255,255,255,0.04);color:#fff;font-family:inherit;}
+.opt .opt-name{flex:1;display:flex;align-items:center;gap:8px;}
+.opt .opt-price{color:#f0d48a;}
+.opt:hover{border-color:rgba(212,176,88,0.6);}
+.opt.active{border-color:#d4b058;background:rgba(212,176,88,0.16);
+box-shadow:0 0 0 1px rgba(212,176,88,0.45) inset;}
+.opt.active::after{content:'✓';color:#d4b058;font-size:18px;}
+.opt.wechat{border-color:rgba(80,200,120,0.4);}
+.opt.alipay{border-color:rgba(80,150,230,0.4);}
+.opt.disabled{opacity:.45;cursor:not-allowed;}
+.opt.disabled:hover{border-color:rgba(80,150,230,0.4);}
+.pay-type-ico{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+font-size:16px;color:#fff;flex:none;}
+.wechat-ico{background:#1aad19;}
+.alipay-ico{background:#1677ff;}
+.pay-tag{font-size:11px;font-weight:normal;color:#1a1810;background:#d4b058;border-radius:6px;padding:2px 7px;letter-spacing:0;}
+/* 立即支付按钮 */
+.pay-now{width:100%;padding:15px;font-size:17px;font-weight:bold;letter-spacing:3px;border:none;border-radius:10px;
+cursor:pointer;color:#1a1810;background:linear-gradient(135deg,#ffdd90,#d4b058);font-family:inherit;
+box-shadow:0 4px 18px rgba(212,176,88,0.4);transition:all .25s;margin-top:2px;}
+.pay-now:hover{transform:translateY(-2px);box-shadow:0 6px 26px rgba(212,176,88,0.65);}
+.pay-now:active{transform:translateY(0);}
+.choose-toast{font-size:12px;color:#e0a04a;height:16px;margin-top:10px;opacity:0;transition:opacity .3s;}
+.choose-toast.show{opacity:1;}
+/* 第二级：收款码页 */
+.pay-back{position:absolute;top:13px;left:14px;background:none;border:none;color:#8a7d5a;font-size:13px;cursor:pointer;font-family:inherit;}
+.pay-back:hover{color:#d4b058;}
+.pay-qr{width:100%;max-width:250px;border-radius:12px;border:1px solid rgba(212,176,88,0.3);
+display:block;margin:0 auto;background:#fff;}
+.pay-tip{font-size:13px;color:#cfc39a;margin:14px 0 8px;}
+.pay-switch{width:100%;padding:15px;font-size:16px;font-weight:bold;letter-spacing:2px;border:none;border-radius:10px;
+cursor:pointer;color:#1a1810;background:linear-gradient(135deg,#ffdd90,#d4b058);font-family:inherit;
+box-shadow:0 4px 18px rgba(212,176,88,0.4);transition:all .25s;}
+.pay-switch:hover{transform:translateY(-2px);box-shadow:0 6px 26px rgba(212,176,88,0.65);}
+.pay-switch:active{transform:translateY(0);}
+.pay-toast{font-size:12px;color:#7ec47e;height:16px;margin-top:10px;opacity:0;transition:opacity .3s;}
+.pay-toast.show{opacity:1;}
+.pay-note{margin-top:8px;font-size:11px;color:#7a6d4a;line-height:1.5;}
+.opt-dur{font-style:normal;font-size:11px;font-weight:normal;color:#c9b98a;
+border:1px solid rgba(212,176,88,0.25);border-radius:5px;padding:1px 6px;}
+/* 上传凭证 / 订单结果 */
+.order-sum{background:rgba(0,0,0,0.25);border:1px solid rgba(212,176,88,0.3);border-radius:10px;
+padding:10px 14px;margin-bottom:12px;font-size:14px;color:#e8dcbc;
+display:flex;justify-content:space-between;align-items:center;}
+.upload-box{width:100%;border:1.5px dashed rgba(212,176,88,0.5);border-radius:12px;padding:18px;
+cursor:pointer;color:#cfc39a;font-size:14px;text-align:center;margin-bottom:12px;transition:.2s;}
+.upload-box:hover{background:rgba(212,176,88,0.08);}
+.upload-box img{max-width:100%;max-height:200px;border-radius:8px;display:block;margin:0 auto 8px;}
+.pay-submit{width:100%;padding:14px;font-size:16px;font-weight:bold;letter-spacing:2px;border:none;border-radius:10px;
+cursor:pointer;color:#1a1810;background:linear-gradient(135deg,#ffdd90,#d4b058);font-family:inherit;
+box-shadow:0 4px 18px rgba(212,176,88,0.4);margin-bottom:8px;}
+.pay-submit:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;}
+.wait-dot{color:#f0d48a;font-size:14px;margin:12px 0;}
+.card-result{background:rgba(255,255,255,0.06);border:1px solid rgba(126,196,126,0.5);border-radius:10px;padding:14px;margin:10px 0;}
+.card-result .ck{font-size:17px;font-weight:bold;letter-spacing:1px;color:#9be89b;word-break:break-all;
+font-family:Consolas,monospace;margin-top:6px;}
+.copy-btn{margin-top:10px;padding:8px 18px;border:1px solid rgba(212,176,88,0.5);background:transparent;
+color:#d4b058;border-radius:8px;cursor:pointer;font-family:inherit;}
+.copy-btn:hover{background:rgba(212,176,88,0.15);}
+.reject-box{color:#e08080;font-size:13px;margin:10px 0;line-height:1.5;}
 </style>
 </head>
 <body>
@@ -62,13 +141,128 @@ border-radius:12px;padding:20px 25px;text-align:center;min-width:140px;}
   </div>
   
   <div class="buttons">
-    <a href="calc.html" class="btn btn-use">立即使用</a>
+    <a href="calculator.html" class="btn btn-use">立即使用</a>
     <a href="test.html" class="btn btn-buy">管理员版本</a>
-    <a href="https://shop.368fk.cn/shop/FUCWGU1F" target="_blank" class="btn btn-buy">购买卡密</a>
+    <a href="javascript:void(0)" class="btn btn-buy" id="buyBtn">购买卡密</a>
   </div>
   
   <div class="contact">客服QQ：<span>3676023445</span></div>
   <div class="tip">AI本产品为私人版本，如被破解将追究责任</div>
+</div>
+
+<!-- 购买卡密弹窗：先选支付方式，再出收款码 -->
+<div class="pay-mask" id="payMask">
+  <div class="pay-modal">
+    <button class="pay-close" id="payClose" title="关闭">×</button>
+
+    <!-- 第一级：选卡种 + 选支付方式 + 立即支付 -->
+    <div class="pay-pane" id="stepChoose">
+      <div class="pay-title">购买卡密</div>
+      <div class="pay-sub">请先选择卡密类型和支付方式</div>
+
+      <div class="choose-label">① 选择卡密类型</div>
+      <div class="opt-list" id="cardList">
+        <button class="opt" data-card="小时卡" data-type="hours" data-duration="2" data-price="4.8">
+          <span class="opt-name">小时卡 <em class="opt-dur">2小时</em></span><span class="opt-price">¥4.8</span>
+        </button>
+        <button class="opt" data-card="天卡" data-type="days" data-duration="1" data-price="7.77">
+          <span class="opt-name">天卡 <em class="opt-dur">1天</em></span><span class="opt-price">¥7.77</span>
+        </button>
+        <button class="opt" data-card="永久卡" data-type="permanent" data-duration="0" data-price="48">
+          <span class="opt-name">永久卡 <em class="opt-dur">永久有效</em></span><span class="opt-price">¥48</span>
+        </button>
+      </div>
+
+      <div class="choose-label">② 选择支付方式</div>
+      <div class="opt-list" id="payList">
+        <button class="opt wechat" data-pay="wechat">
+          <span class="pay-type-ico wechat-ico">微</span>
+          <span class="opt-name">微信支付</span>
+        </button>
+        <button class="opt alipay" data-pay="alipay">
+          <span class="pay-type-ico alipay-ico">支</span>
+          <span class="opt-name">支付宝<span class="pay-tag">口令支付</span></span>
+        </button>
+      </div>
+
+      <button class="pay-now" id="payNow">立即支付</button>
+      <div class="choose-toast" id="chooseToast"></div>
+      <button id="queryEntry" style="width:100%;margin-top:6px;padding:8px;background:none;border:none;color:#c9b98a;font-size:13px;cursor:pointer;text-decoration:underline;font-family:inherit;">📦 已下单？用订单号查询卡密</button>
+      <div class="pay-note">付款后请联系客服QQ 3676023445 领取卡密</div>
+    </div>
+
+    <!-- 第二级：收款码 / 支付宝口令 -->
+    <div class="pay-pane" id="stepQr" style="display:none;">
+      <button class="pay-back" id="payBack">‹ 返回选择</button>
+      <div class="pay-title" id="qrTitle">微信扫码支付</div>
+      <div class="pay-sub" id="qrSub">请使用微信「扫一扫」扫描下方二维码付款</div>
+      <!-- 微信：收款码 -->
+      <img class="pay-qr" id="payQr" src="pay-1.jpg" alt="收款码">
+      <!-- 支付宝：口令红包教程 -->
+      <div id="alipayPwdBox" style="display:none;text-align:left;margin:6px 0 10px;background:rgba(22,119,255,0.08);border:1px solid rgba(22,119,255,0.3);border-radius:10px;padding:14px;">
+        <div style="font-size:14px;color:#7ab8ff;font-weight:bold;margin-bottom:8px;">📖 支付宝口令红包操作教程</div>
+        <div style="font-size:13px;color:#cfc39a;line-height:2;">
+          ① 打开支付宝，顶部搜索框输入「<b style="color:#f0d48a;">口令红包</b>」<br>
+          ② 点击「<b style="color:#f0d48a;">发口令红包</b>」<br>
+          ③ 金额输入<b style="color:#f0d48a;">对应卡密价格</b>，红包个数填 <b style="color:#f0d48a;">1</b><br>
+          ④ 点击「发红包」，<b style="color:#f0d48a;">自己设置一个数字口令</b>（记好）<br>
+          ⑤ 完成后点下方「我已支付，下一步」，把你设的口令填进去
+        </div>
+      </div>
+      <div class="pay-tip" id="qrTip">手机上可长按二维码保存后再扫码</div>
+      <button class="pay-switch" id="paySwitch">无法支付？换一个</button>
+      <div class="pay-toast" id="payToast"></div>
+      <div class="pay-note" id="qrNote">若当前二维码无法支付 / 加载失败，请点击上方按钮更换<br>付款后请上传付款凭证</div>
+      <button class="pay-submit" id="goUpload" style="margin-top:12px;">我已支付，下一步</button>
+    </div>
+
+    <!-- 第三级：上传付款凭证 / 填写支付宝口令 -->
+    <div class="pay-pane" id="stepUpload" style="display:none;">
+      <button class="pay-back" id="uploadBack">‹ 返回</button>
+      <div class="pay-title">确认付款信息</div>
+      <div class="order-sum"><span id="upLabel">小时卡（2小时）</span><span id="upAmount">¥4.8</span></div>
+      <div style="text-align:left;margin-bottom:8px;">
+        <label style="font-size:12px;color:#a09070;letter-spacing:1px;">③ 填写手机号（用于换设备后查单取卡，必填）</label>
+        <input id="buyerPhone" type="tel" maxlength="11" placeholder="请输入11位手机号"
+          style="width:100%;margin-top:6px;padding:11px 12px;border-radius:9px;border:1px solid rgba(212,176,88,0.4);background:rgba(0,0,0,.3);color:#fff;font-size:14px;outline:none;letter-spacing:2px;">
+      </div>
+      <!-- 支付宝：填写口令数字 -->
+      <div id="alipayInputBox" style="display:none;text-align:left;margin-bottom:8px;">
+        <label style="font-size:12px;color:#a09070;letter-spacing:1px;">④ 填写你在支付宝设置的口令数字（必填，纯数字）</label>
+        <input id="alipayPwdInput" type="text" inputmode="numeric" placeholder="请输入你发红包时设置的数字口令"
+          style="width:100%;margin-top:6px;padding:11px 12px;border-radius:9px;border:1px solid rgba(22,119,255,0.5);background:rgba(0,0,0,.3);color:#fff;font-size:18px;outline:none;letter-spacing:6px;font-family:Consolas,monospace;">
+      </div>
+      <!-- 微信：上传截图；支付宝：截图可选 -->
+      <div class="upload-box" id="uploadBox">
+        <div id="uploadHint">📷 点击选择付款截图（微信支付成功页）</div>
+        <img id="proofPreview" style="display:none;" alt="凭证预览">
+      </div>
+      <input type="file" id="proofFile" accept="image/*" style="display:none;">
+      <button class="pay-submit" id="submitOrder" disabled>提交，等待发卡</button>
+      <div class="pay-toast" id="upToast"></div>
+      <div class="pay-note" id="upNote">提交后客服核对到账即发放卡密，请耐心等待</div>
+    </div>
+
+    <!-- 第四级：订单状态 / 领取卡密 -->
+    <div class="pay-pane" id="stepResult" style="display:none;">
+      <div class="pay-title">我的订单</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button id="tabNo" class="pay-switch" style="flex:1;padding:8px 0;font-size:13px;margin:0;background:rgba(212,176,88,0.18);">📦 订单号查询</button>
+        <button id="tabPhone" class="pay-switch" style="flex:1;padding:8px 0;font-size:13px;margin:0;background:rgba(255,255,255,0.05);color:#a09070;">📱 手机号查询</button>
+      </div>
+      <div id="queryNoBox" style="display:flex;gap:8px;margin-bottom:12px;">
+        <input id="queryNo" placeholder="输入订单号（ORD开头）" style="flex:1;min-width:0;padding:11px 12px;border-radius:9px;border:1px solid rgba(212,176,88,0.4);background:rgba(0,0,0,.3);color:#fff;font-size:13px;outline:none;text-transform:uppercase;letter-spacing:1px;">
+        <button class="pay-switch" id="queryBtn" style="width:auto;padding:0 16px;margin:0;white-space:nowrap;">查询</button>
+      </div>
+      <div id="queryPhoneBox" style="display:none;gap:8px;margin-bottom:12px;">
+        <input id="queryPhone" type="tel" maxlength="11" placeholder="输入下单时的11位手机号" style="flex:1;min-width:0;padding:11px 12px;border-radius:9px;border:1px solid rgba(212,176,88,0.4);background:rgba(0,0,0,.3);color:#fff;font-size:13px;outline:none;letter-spacing:2px;">
+        <button class="pay-switch" id="queryPhoneBtn" style="width:auto;padding:0 16px;margin:0;white-space:nowrap;">查询</button>
+      </div>
+      <div id="resultBody"></div>
+      <button class="pay-switch" id="refreshOrder" style="margin-top:10px;">刷新本设备订单</button>
+      <button class="pay-back" id="resultClose" style="position:static;display:block;margin:10px auto 0;">关闭</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -95,6 +289,245 @@ function draw(){
 }
 draw();
 window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// 购买流程：选卡种 -> 选支付方式 -> 收款码 -> 上传凭证 -> 等待审核 -> 领取卡密
+(function(){
+  var SUPA_URL='https://xrfzqlwrkidsblxofevj.supabase.co';
+  var SUPA_KEY='sb_publishable_9l8AW-w--GORou1AaAD95g_TOQrQ-0f';
+  var sb=(window.supabase&&supabase.createClient)?supabase.createClient(SUPA_URL,SUPA_KEY):null;
+  // 设备ID：与 calculator.html 完全一致，保证下单与激活设备对得上
+  function getDeviceId(){
+    var id=localStorage.getItem('_cd_id');if(id)return id;
+    var info=[navigator.userAgent,screen.width+'x'+screen.height,screen.colorDepth,
+      Intl.DateTimeFormat().resolvedOptions().timeZone,navigator.language].join('|');
+    var h=0;for(var i=0;i<info.length;i++){h=((h<<5)-h)+info.charCodeAt(i);h|=0;}
+    id='D'+Math.abs(h).toString(36).toUpperCase();
+    localStorage.setItem('_cd_id',id);return id;
+  }
+  var deviceId=getDeviceId();
+  var wechat=['pay-1.jpg','pay-2.jpg','pay-3.jpg'];
+  var idx=0, selCard=null, selPay=null, proofFile=null, pollTimer=null;
+  var mask=document.getElementById('payMask');
+  var panes={choose:document.getElementById('stepChoose'),qr:document.getElementById('stepQr'),
+             upload:document.getElementById('stepUpload'),result:document.getElementById('stepResult')};
+  var qr=document.getElementById('payQr'),qrTitle=document.getElementById('qrTitle');
+  var toast=document.getElementById('payToast'),cToast=document.getElementById('chooseToast'),upToast=document.getElementById('upToast');
+  function flash(el,msg,color){el.textContent=msg;el.style.color=color||'#e0a04a';el.classList.add('show');
+    clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show');},2000);}
+  function showStep(w){for(var k in panes){panes[k].style.display=(k===w)?'block':'none';}}
+  function durText(c){return c.type==='hours'?'2小时':c.type==='days'?'1天':'永久有效';}
+  function randPick(ex){var n=wechat.length,r=Math.floor(Math.random()*n);while(n>1&&r===ex)r=Math.floor(Math.random()*n);return r;}
+  function openPay(){mask.classList.add('show');showStep('choose');}
+  function closePay(){mask.classList.remove('show');stopPoll();}
+  // ① 选卡种
+  document.querySelectorAll('#cardList .opt').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('#cardList .opt').forEach(function(x){x.classList.remove('active');});
+      b.classList.add('active');
+      selCard={name:b.dataset.card,type:b.dataset.type,duration:parseInt(b.dataset.duration,10),price:b.dataset.price};
+    });
+  });
+  // ② 选支付方式
+  document.querySelectorAll('#payList .opt').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('#payList .opt').forEach(function(x){x.classList.remove('active');});
+      b.classList.add('active');selPay=b.dataset.pay;
+    });
+  });
+  // ③ 立即支付 -> 收款码（微信）或口令红包教程（支付宝）
+  document.getElementById('payNow').addEventListener('click',function(){
+    if(!selCard){flash(cToast,'请先选择卡密类型');return;}
+    if(!selPay){flash(cToast,'请先选择支付方式');return;}
+    var isAlipay=selPay==='alipay';
+    document.getElementById('payQr').style.display=isAlipay?'none':'block';
+    document.getElementById('alipayPwdBox').style.display=isAlipay?'block':'none';
+    document.getElementById('qrTip').style.display=isAlipay?'none':'block';
+    document.getElementById('paySwitch').style.display=isAlipay?'none':'inline-block';
+    if(isAlipay){
+      qrTitle.textContent='支付宝口令红包 · '+selCard.name+' ¥'+selCard.price;
+      document.getElementById('qrSub').textContent='请按下方教程发口令红包，金额 ¥'+selCard.price;
+      document.getElementById('qrNote').innerHTML='发完红包后，把你自己设置的数字口令填到下一步<br>客服核对后即发放卡密';
+    }else{
+      idx=randPick(-1);qr.src=wechat[idx];
+      qrTitle.textContent='微信支付 · '+selCard.name+' ¥'+selCard.price;
+      document.getElementById('qrSub').textContent='请使用微信「扫一扫」扫描下方二维码付款';
+      document.getElementById('qrNote').innerHTML='若当前二维码无法支付 / 加载失败，请点击上方按钮更换<br>付款后请上传付款凭证';
+    }
+    showStep('qr');
+  });
+  document.getElementById('paySwitch').addEventListener('click',function(){
+    idx=randPick(idx);qr.src=wechat[idx];flash(toast,'已为您更换收款码，请重新扫码','#7ec47e');
+  });
+  document.getElementById('payBack').addEventListener('click',function(){showStep('choose');});
+  // ④ 去上传凭证
+  var uploadBox=document.getElementById('uploadBox'),proofInput=document.getElementById('proofFile'),
+      preview=document.getElementById('proofPreview'),hint=document.getElementById('uploadHint'),
+      submitBtn=document.getElementById('submitOrder');
+  document.getElementById('goUpload').addEventListener('click',function(){
+    document.getElementById('upLabel').textContent=selCard.name+'（'+durText(selCard)+'）';
+    document.getElementById('upAmount').textContent='¥'+selCard.price;
+    var isAlipay=selPay==='alipay';
+    document.getElementById('alipayInputBox').style.display=isAlipay?'block':'none';
+    document.getElementById('alipayPwdInput').value='';
+    hint.textContent=isAlipay?'📷 付款截图可选传（有就传，没有也行）':'📷 点击选择付款截图（微信支付成功页）';
+    document.getElementById('upNote').textContent=isAlipay
+      ?'提交后客服凭你填的口令去支付宝领取红包，核对到账即发卡'
+      :'提交后客服核对到账即发放卡密，请耐心等待';
+    resetUpload();
+    // 支付宝：必须填了口令才能提交；微信：必须选截图
+    if(isAlipay){submitBtn.disabled=true;}
+    showStep('upload');
+  });
+  // 支付宝口令输入时实时校验，填对才启用提交
+  document.getElementById('alipayPwdInput').addEventListener('input',function(){
+    var v=this.value.trim();
+    submitBtn.disabled=!(/^\d+$/.test(v)&&v.length>=4);
+  });
+  document.getElementById('uploadBack').addEventListener('click',function(){showStep('qr');});
+  uploadBox.addEventListener('click',function(){proofInput.click();});
+  proofInput.addEventListener('change',function(){
+    var f=proofInput.files[0];if(!f)return;
+    if(!/^image\//.test(f.type)){flash(upToast,'请选择图片文件');return;}
+    proofFile=f;var rd=new FileReader();
+    rd.onload=function(e){preview.src=e.target.result;preview.style.display='block';
+      hint.textContent='已选择：'+f.name+'（点击可重选）';submitBtn.disabled=false;};
+    rd.readAsDataURL(f);
+  });
+  function resetUpload(){proofFile=null;proofInput.value='';preview.style.display='none';preview.src='';
+    hint.textContent='📷 点击选择付款截图（微信支付成功页）';submitBtn.disabled=true;submitBtn.textContent='提交，等待发卡';
+    document.getElementById('buyerPhone').value='';
+    document.getElementById('alipayPwdInput').value='';}
+  // 手机号校验：11位、1开头、第二位3-9
+  function validPhone(v){return /^1[3-9]\d{9}$/.test(String(v||'').replace(/\D/g,''));}
+  // ⑤ 提交：微信先传截图再下单；支付宝填口令即可（截图可选）
+  submitBtn.addEventListener('click',async function(){
+    if(!sb){flash(upToast,'系统未就绪，请刷新重试');return;}
+    var phone=document.getElementById('buyerPhone').value.trim();
+    if(!validPhone(phone)){flash(upToast,'请填写正确的11位手机号');return;}
+    var isAlipay=selPay==='alipay';
+    var alipayPwd='';
+    if(isAlipay){
+      alipayPwd=document.getElementById('alipayPwdInput').value.trim();
+      if(!/^\d+$/.test(alipayPwd)){flash(upToast,'支付宝口令必须是纯数字');return;}
+      if(alipayPwd.length<4){flash(upToast,'口令长度不够，请核对');return;}
+    }else{
+      if(!proofFile){flash(upToast,'请先选择付款截图');return;}
+    }
+    submitBtn.disabled=true;submitBtn.textContent='提交中...';
+    try{
+      var proofUrl='';
+      if(proofFile){
+        submitBtn.textContent='上传中...';
+        var path='proof/'+deviceId+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.jpg';
+        var up=await sb.storage.from('pay-proofs').upload(path,proofFile,{contentType:proofFile.type||'image/jpeg'});
+        if(up.error)throw up.error;
+        proofUrl=sb.storage.from('pay-proofs').getPublicUrl(path).data.publicUrl;
+      }
+      submitBtn.textContent='提交中...';
+      var resp=await sb.rpc('submit_order',{
+        p_device_id:deviceId,p_card_type:selCard.type,p_duration:selCard.duration,
+        p_card_label:selCard.name,p_amount:parseFloat(selCard.price),
+        p_pay_method:selPay,p_proof_url:proofUrl,p_phone:phone,p_alipay_pwd:alipayPwd
+      });
+      if(resp.error)throw resp.error;
+      showStep('result');renderResult();startPoll();
+    }catch(e){
+      flash(upToast,'提交失败：'+(e.message||e));
+      submitBtn.disabled=false;submitBtn.textContent='提交，等待发卡';
+    }
+  });
+  // ⑥ 订单结果展示 + 轮询
+  var resultBody=document.getElementById('resultBody');
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function renderOrders(data){
+    if(!data||!data.length){resultBody.innerHTML='<div class="wait-dot">没有查到相关订单，请核对订单号</div>';return;}
+    var html='';
+    data.forEach(function(o){
+      html+='<div class="order-sum"><span>'+esc(o.card_label)+'</span><span>¥'+esc(o.amount)+'</span></div>';
+      if(o.status==='pending'){
+        html+='<div class="wait-dot">⏳ 已提交，等待客服核对到账…</div>'
+          +'<div style="margin:8px 0;font-size:14px;">订单号：<b style="color:#f0d48a;letter-spacing:1px;">'+esc(o.order_no)+'</b> '
+          +'<button class="copy-btn" data-no="'+esc(o.order_no)+'" style="padding:3px 10px;font-size:12px;">复制订单号</button></div>'
+          +'<div class="pay-note">⚠ 请截图或复制保存订单号；换浏览器/清缓存/换设备后，凭订单号在上方「订单号查询」取卡</div>';
+      }else if(o.status==='approved'){
+        html+='<div class="card-result"><div style="color:#9be89b;">✅ 已通过，你的卡密：</div>'
+          +'<div class="ck">'+esc(o.card_key)+'</div>'
+          +'<button class="copy-btn" data-ck="'+esc(o.card_key)+'">复制卡密</button></div>'
+          +'<div class="pay-note">复制后点首页「立即使用」粘贴激活</div>';
+      }else if(o.status==='rejected'){
+        html+='<div class="reject-box">❌ 未通过：'+esc(o.reject_reason||'凭证不符')+'<br>请核对后重新下单或联系客服QQ 3676023445</div>';
+      }
+    });
+    resultBody.innerHTML=html;
+  }
+  async function renderResult(){
+    if(!sb)return;
+    var resp=await sb.rpc('get_my_orders',{p_device_id:deviceId});
+    if(resp.error){resultBody.innerHTML='<div class="reject-box">查询失败：'+esc(resp.error.message)+'</div>';return;}
+    renderOrders(resp.data);
+  }
+  async function queryByNo(){
+    if(!sb)return;
+    var no=document.getElementById('queryNo').value.trim().toUpperCase();
+    if(!no){renderResult();return;}
+    resultBody.innerHTML='<div class="wait-dot">查询中…</div>';
+    var resp=await sb.rpc('query_order_by_no',{p_order_no:no});
+    if(resp.error){resultBody.innerHTML='<div class="reject-box">查询失败：'+esc(resp.error.message)+'</div>';return;}
+    var d=resp.data;renderOrders(Array.isArray(d)?d:(d?[d]:[]));
+  }
+  async function queryByPhone(){
+    if(!sb)return;
+    var ph=document.getElementById('queryPhone').value.trim().replace(/\D/g,'');
+    if(!validPhone(ph)){resultBody.innerHTML='<div class="reject-box">请输入正确的11位手机号</div>';return;}
+    resultBody.innerHTML='<div class="wait-dot">查询中…</div>';
+    var resp=await sb.rpc('query_orders_by_phone',{p_phone:ph});
+    if(resp.error){resultBody.innerHTML='<div class="reject-box">查询失败：'+esc(resp.error.message)+'</div>';return;}
+    renderOrders(resp.data||[]);
+  }
+  // 查询方式 tab 切换
+  var tabNo=document.getElementById('tabNo'),tabPhone=document.getElementById('tabPhone');
+  function switchTab(which){
+    var isNo=which==='no';
+    document.getElementById('queryNoBox').style.display=isNo?'flex':'none';
+    document.getElementById('queryPhoneBox').style.display=isNo?'none':'flex';
+    tabNo.style.background=isNo?'rgba(212,176,88,0.18)':'rgba(255,255,255,0.05)';
+    tabNo.style.color=isNo?'#f0d48a':'#a09070';
+    tabPhone.style.background=isNo?'rgba(255,255,255,0.05)':'rgba(212,176,88,0.18)';
+    tabPhone.style.color=isNo?'#a09070':'#f0d48a';
+  }
+  tabNo.addEventListener('click',function(){switchTab('no');});
+  tabPhone.addEventListener('click',function(){switchTab('phone');});
+  resultBody.addEventListener('click',function(e){
+    var b=e.target.closest('.copy-btn');if(!b)return;
+    var ck=b.dataset.ck||b.dataset.no, isNo=!!b.dataset.no;
+    function done(){var t=isNo?'已复制 ✓':'已复制 ✓';b.textContent=t;
+      setTimeout(function(){b.textContent=isNo?'复制订单号':'复制卡密';},1500);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(ck).then(done);}
+    else{var t=document.createElement('textarea');t.value=ck;document.body.appendChild(t);t.select();
+      try{document.execCommand('copy');done();}catch(_){}document.body.removeChild(t);}
+  });
+  document.getElementById('refreshOrder').addEventListener('click',renderResult);
+  document.getElementById('queryBtn').addEventListener('click',queryByNo);
+  document.getElementById('queryPhoneBtn').addEventListener('click',queryByPhone);
+  document.getElementById('queryNo').addEventListener('keydown',function(e){if(e.key==='Enter')queryByNo();});
+  document.getElementById('queryPhone').addEventListener('keydown',function(e){if(e.key==='Enter')queryByPhone();});
+  document.getElementById('queryEntry').addEventListener('click',function(){
+    document.getElementById('queryNo').value='';
+    showStep('result');stopPoll();renderResult();
+    setTimeout(function(){document.getElementById('queryNo').focus();},120);
+  });
+  document.getElementById('resultClose').addEventListener('click',closePay);
+  function startPoll(){stopPoll();pollTimer=setInterval(renderResult,4000);}
+  function stopPoll(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
+  document.getElementById('buyBtn').addEventListener('click',openPay);
+  document.getElementById('payClose').addEventListener('click',closePay);
+  mask.addEventListener('click',function(e){if(e.target===mask)closePay();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closePay();});
+})();
 </script>
 </body>
 </html>
