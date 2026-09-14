@@ -452,10 +452,12 @@ window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.heig
       submitBtn.textContent='提交中...';
       // 透视渠道统一标记为 toushi，后台能区分；实际支付方式由 proof_url（微信）/alipay_pwd（支付宝）体现
       var payMethod=channel==='toushi'?'toushi':selPay;
+      // 记录用了哪张微信收款码（用于后台对账统计）
+      var payQr=(selPay==='wechat'||channel==='toushi')?wechat[idx]:'';
       var resp=await sb.rpc('submit_order',{
         p_device_id:deviceId,p_card_type:selCard.type,p_duration:selCard.duration,
         p_card_label:selCard.name,p_amount:parseFloat(selCard.price),
-        p_pay_method:payMethod,p_proof_url:proofUrl,p_phone:phone,p_alipay_pwd:alipayPwd
+        p_pay_method:payMethod,p_proof_url:proofUrl,p_phone:phone,p_alipay_pwd:alipayPwd,p_pay_qr:payQr
       });
       if(resp.error)throw resp.error;
       showStep('result');renderResult();startPoll();
