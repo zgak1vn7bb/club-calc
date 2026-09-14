@@ -144,6 +144,7 @@ color:#d4b058;border-radius:8px;cursor:pointer;font-family:inherit;}
     <a href="calculator.html" class="btn btn-use">立即使用</a>
     <a href="test.html" class="btn btn-buy">管理员版本</a>
     <a href="javascript:void(0)" class="btn btn-buy" id="buyBtn">购买卡密</a>
+    <a href="javascript:void(0)" class="btn btn-buy" id="toushiBtn" style="border-color:rgba(168,85,247,0.5);color:#c9a0ff;">透视购买</a>
   </div>
   
   <div class="contact">客服QQ：<span>3676023445</span></div>
@@ -172,6 +173,15 @@ color:#d4b058;border-radius:8px;cursor:pointer;font-family:inherit;}
           <span class="opt-name">永久卡 <em class="opt-dur">永久有效</em></span><span class="opt-price">¥48</span>
         </button>
       </div>
+      <!-- 透视专属卡种 -->
+      <div class="opt-list" id="cardListToushi" style="display:none;">
+        <button class="opt" data-card="透视测试卡" data-type="days" data-duration="1" data-price="30" style="border-color:rgba(168,85,247,0.4);">
+          <span class="opt-name">透视测试卡 <em class="opt-dur">1天</em></span><span class="opt-price">¥30</span>
+        </button>
+        <button class="opt" data-card="永久卡" data-type="permanent" data-duration="0" data-price="48" style="border-color:rgba(168,85,247,0.4);">
+          <span class="opt-name">永久卡 <em class="opt-dur">永久有效</em></span><span class="opt-price">¥48</span>
+        </button>
+      </div>
 
       <div class="choose-label">② 选择支付方式</div>
       <div class="opt-list" id="payList">
@@ -188,7 +198,7 @@ color:#d4b058;border-radius:8px;cursor:pointer;font-family:inherit;}
       <button class="pay-now" id="payNow">立即支付</button>
       <div class="choose-toast" id="chooseToast"></div>
       <button id="queryEntry" style="width:100%;margin-top:6px;padding:8px;background:none;border:none;color:#c9b98a;font-size:13px;cursor:pointer;text-decoration:underline;font-family:inherit;">📦 已下单？用订单号查询卡密</button>
-      <div class="pay-note">付款后请联系客服QQ 3676023445 领取卡密</div>
+      <div class="pay-note">不会使用请联系客服QQ 3676023445</div>
     </div>
 
     <!-- 第二级：收款码 / 支付宝口令 -->
@@ -308,8 +318,8 @@ window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.heig
     localStorage.setItem('_cd_id',id);return id;
   }
   var deviceId=getDeviceId();
-  var wechat=['pay-1.jpg','pay-2.jpg','pay-3.jpg'];
-  var idx=0, selCard=null, selPay=null, proofFile=null, pollTimer=null;
+  var wechat=['pay-1.jpg','pay-2.jpg','pay-3.jpg','pay-4.jpg'];
+  var idx=0, selCard=null, selPay=null, proofFile=null, pollTimer=null, channel='normal';
   var mask=document.getElementById('payMask');
   var panes={choose:document.getElementById('stepChoose'),qr:document.getElementById('stepQr'),
              upload:document.getElementById('stepUpload'),result:document.getElementById('stepResult')};
@@ -320,12 +330,22 @@ window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.heig
   function showStep(w){for(var k in panes){panes[k].style.display=(k===w)?'block':'none';}}
   function durText(c){return c.type==='hours'?'2小时':c.type==='days'?'1天':'永久有效';}
   function randPick(ex){var n=wechat.length,r=Math.floor(Math.random()*n);while(n>1&&r===ex)r=Math.floor(Math.random()*n);return r;}
-  function openPay(){mask.classList.add('show');showStep('choose');}
+  function openPay(ch){
+    channel=ch||'normal';
+    var isToushi=channel==='toushi';
+    document.getElementById('cardList').style.display=isToushi?'none':'flex';
+    document.getElementById('cardListToushi').style.display=isToushi?'flex':'none';
+    document.getElementById('payList').style.display='flex';
+    document.querySelectorAll('#cardList .opt,#cardListToushi .opt').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('#payList .opt').forEach(function(x){x.classList.remove('active');});
+    selCard=null;selPay=null;
+    mask.classList.add('show');showStep('choose');
+  }
   function closePay(){mask.classList.remove('show');stopPoll();}
-  // ① 选卡种
-  document.querySelectorAll('#cardList .opt').forEach(function(b){
+  // ① 选卡种（普通+透视两套列表）
+  document.querySelectorAll('#cardList .opt,#cardListToushi .opt').forEach(function(b){
     b.addEventListener('click',function(){
-      document.querySelectorAll('#cardList .opt').forEach(function(x){x.classList.remove('active');});
+      document.querySelectorAll('#cardList .opt,#cardListToushi .opt').forEach(function(x){x.classList.remove('active');});
       b.classList.add('active');
       selCard={name:b.dataset.card,type:b.dataset.type,duration:parseInt(b.dataset.duration,10),price:b.dataset.price};
     });
@@ -337,25 +357,28 @@ window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.heig
       b.classList.add('active');selPay=b.dataset.pay;
     });
   });
-  // ③ 立即支付 -> 收款码（微信）或口令红包教程（支付宝）
+  // ③ 立即支付 -> 收款码（微信/透视）或口令红包教程（支付宝）
   document.getElementById('payNow').addEventListener('click',function(){
     if(!selCard){flash(cToast,'请先选择卡密类型');return;}
     if(!selPay){flash(cToast,'请先选择支付方式');return;}
     var isAlipay=selPay==='alipay';
+    var payName=selPay==='wechat'?'微信支付':'支付宝';
+    if(channel==='toushi'){payName='透视 · '+payName;}
     document.getElementById('payQr').style.display=isAlipay?'none':'block';
     document.getElementById('alipayPwdBox').style.display=isAlipay?'block':'none';
     document.getElementById('qrTip').style.display=isAlipay?'none':'block';
     document.getElementById('paySwitch').style.display=isAlipay?'none':'inline-block';
     if(isAlipay){
-      qrTitle.textContent='支付宝口令红包 · '+selCard.name+' ¥'+selCard.price;
+      qrTitle.textContent=payName+' · '+selCard.name+' ¥'+selCard.price;
       document.getElementById('qrSub').textContent='请按下方教程发口令红包，金额 ¥'+selCard.price;
       document.getElementById('qrNote').innerHTML='发完红包后，把你自己设置的数字口令填到下一步<br>客服核对后即发放卡密';
     }else{
       idx=randPick(-1);qr.src=wechat[idx];
-      qrTitle.textContent='微信支付 · '+selCard.name+' ¥'+selCard.price;
+      qrTitle.textContent=payName+' · '+selCard.name+' ¥'+selCard.price;
       document.getElementById('qrSub').textContent='请使用微信「扫一扫」扫描下方二维码付款';
       document.getElementById('qrNote').innerHTML='若当前二维码无法支付 / 加载失败，请点击上方按钮更换<br>付款后请上传付款凭证';
     }
+    document.getElementById('goUpload').textContent='我已支付，下一步';
     showStep('qr');
   });
   document.getElementById('paySwitch').addEventListener('click',function(){
@@ -377,7 +400,6 @@ window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.heig
       ?'提交后客服凭你填的口令去支付宝领取红包，核对到账即发卡'
       :'提交后客服核对到账即发放卡密，请耐心等待';
     resetUpload();
-    // 支付宝：必须填了口令才能提交；微信：必须选截图
     if(isAlipay){submitBtn.disabled=true;}
     showStep('upload');
   });
@@ -427,10 +449,12 @@ window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.heig
         proofUrl=sb.storage.from('pay-proofs').getPublicUrl(path).data.publicUrl;
       }
       submitBtn.textContent='提交中...';
+      // 透视渠道统一标记为 toushi，后台能区分；实际支付方式由 proof_url（微信）/alipay_pwd（支付宝）体现
+      var payMethod=channel==='toushi'?'toushi':selPay;
       var resp=await sb.rpc('submit_order',{
         p_device_id:deviceId,p_card_type:selCard.type,p_duration:selCard.duration,
         p_card_label:selCard.name,p_amount:parseFloat(selCard.price),
-        p_pay_method:selPay,p_proof_url:proofUrl,p_phone:phone,p_alipay_pwd:alipayPwd
+        p_pay_method:payMethod,p_proof_url:proofUrl,p_phone:phone,p_alipay_pwd:alipayPwd
       });
       if(resp.error)throw resp.error;
       showStep('result');renderResult();startPoll();
@@ -523,7 +547,8 @@ window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.heig
   document.getElementById('resultClose').addEventListener('click',closePay);
   function startPoll(){stopPoll();pollTimer=setInterval(renderResult,4000);}
   function stopPoll(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
-  document.getElementById('buyBtn').addEventListener('click',openPay);
+  document.getElementById('buyBtn').addEventListener('click',function(){openPay('normal');});
+  document.getElementById('toushiBtn').addEventListener('click',function(){openPay('toushi');});
   document.getElementById('payClose').addEventListener('click',closePay);
   mask.addEventListener('click',function(e){if(e.target===mask)closePay();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closePay();});
