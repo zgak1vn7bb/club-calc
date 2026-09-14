@@ -37,6 +37,8 @@ border-radius:12px;padding:20px 25px;text-align:center;min-width:140px;}
 .feature-text{font-size:13px;color:#a09070;}
 .contact{font-size:14px;color:#666;}
 .contact span{color:#d4b058;}
+.buy-hint{margin-top:14px;font-size:13px;color:#a09070;}
+.buy-hint::before{content:'💡 ';}
 .tip{margin-top:20px;font-size:12px;color:#555;}
 @media(max-width:600px){
   .title{font-size:28px;}
@@ -141,11 +143,12 @@ color:#d4b058;border-radius:8px;cursor:pointer;font-family:inherit;}
   </div>
   
   <div class="buttons">
-    <a href="calculator.html" class="btn btn-use">立即使用</a>
+    <a href="javascript:void(0)" class="btn btn-use" id="buyBtn" style="box-shadow:0 5px 30px rgba(212,176,88,0.6);">🔑 估算卡密购买</a>
+    <a href="calculator.html" class="btn btn-buy">立即使用</a>
+    <a href="javascript:void(0)" class="btn btn-buy" id="toushiBtn" style="border-color:rgba(168,85,247,0.6);color:#d4a8ff;">💜 透视购买</a>
     <a href="test.html" class="btn btn-buy">管理员版本</a>
-    <a href="javascript:void(0)" class="btn btn-buy" id="buyBtn">购买卡密</a>
-    <a href="javascript:void(0)" class="btn btn-buy" id="toushiBtn" style="border-color:rgba(168,85,247,0.5);color:#c9a0ff;">透视购买</a>
   </div>
+  <div class="buy-hint">没有卡密？点上方「估算卡密购买」，付款后自动发卡</div>
   
   <div class="contact">客服QQ：<span>3676023445</span></div>
   <div class="tip">AI本产品为私人版本，如被破解将追究责任</div>
