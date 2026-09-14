@@ -396,6 +396,7 @@ window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.heig
     document.getElementById('alipayInputBox').style.display=isAlipay?'block':'none';
     document.getElementById('alipayPwdInput').value='';
     hint.textContent=isAlipay?'📷 付款截图可选传（有就传，没有也行）':'📷 点击选择付款截图（微信支付成功页）';
+    document.getElementById('uploadBox').style.display=isAlipay?'none':'block';
     document.getElementById('upNote').textContent=isAlipay
       ?'提交后客服凭你填的口令去支付宝领取红包，核对到账即发卡'
       :'提交后客服核对到账即发放卡密，请耐心等待';
